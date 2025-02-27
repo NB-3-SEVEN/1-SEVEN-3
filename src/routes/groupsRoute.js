@@ -215,6 +215,24 @@ router
     });
 
     res.json({ message: updatedGroup });
+  })
+  .delete("/:id", async (req, res) => {
+    const { id } = req.params;
+    const { ownerPassword } = req.body;
+
+    const group = await prisma.group.findUniqueOrThrow({
+      where: { id: parseInt(id, 10) },
+    });
+
+    if (group.ownerPassword !== ownerPassword) {
+      return res.status(401).json({ error: "Wrong password" });
+    }
+
+    const deletedGrop = await prisma.group.delete({
+      where: { id: parseInt(id, 10) },
+    });
+
+    res.json({ message: deletedGrop });
   });
 
 export default router;

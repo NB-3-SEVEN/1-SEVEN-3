@@ -4,7 +4,6 @@ import { postGroup } from "../api/group.js";
 
 const prisma = new PrismaClient();
 const router = express.Router();
-const prisma = new PrismaClient();
 
 router.route("/").get((req, res) => {
   res.status(200).send("Groups route is working!");

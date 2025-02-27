@@ -47,7 +47,6 @@ router.post(
       authorPassword,
     } = req.body;
 
-    // 닉네임과 비밀번호로 참가자 조회
     const participant = await prisma.participant.findFirst({
       where: {
         nickname: authorNickname,
@@ -63,7 +62,6 @@ router.post(
         .send({ message: "그룹에 등록된 참가자가 아닙니다." });
     }
 
-    // 운동 기록 저장
     const record = await prisma.record.create({
       data: {
         exerciseType,
@@ -71,7 +69,7 @@ router.post(
         time,
         distance,
         photos,
-        authorId: participant.id, // Directly set the authorId to the existing participant's ID
+        authorId: participant.id,
         groupId: participant.group.id,
       },
       select: {
@@ -92,6 +90,7 @@ router.post(
 );
 
 
+// 그룹 운동 기록 목록 조회
 router.get(
   "/:groupId/records",
   asyncHandler(async (req, res) => {
@@ -120,7 +119,7 @@ router.get(
 
     const where = search
       ? {
-          groupId: parseInt(groupId), // groupId를 직접 사용
+          groupId: parseInt(groupId),
           author: {
             nickname: {
               contains: search,
@@ -128,7 +127,7 @@ router.get(
             },
           },
         }
-      : { groupId: parseInt(groupId) }; // groupId를 직접 사용
+      : { groupId: parseInt(groupId) };
 
     const records = await prisma.record.findMany({
       where,
@@ -156,6 +155,41 @@ router.get(
     });
 
     res.send({ data: records, total });
+  })
+);
+
+// 그룹 운동 기록 상세 조회
+router.get(
+  "/:groupId/records/:recordId",
+  asyncHandler(async (req, res) => {
+    const { groupId, recordId } = req.params;
+
+    const record = await prisma.record.findUnique({
+      where: {
+        id: parseInt(recordId, 10),
+        groupId: parseInt(groupId, 10),
+      },
+      select: {
+        id: true,
+        exerciseType: true,
+        description: true,
+        time: true,
+        distance: true,
+        photos: true,
+        author: {
+          select: {
+            id: true,
+            nickname: true,
+          },
+        },
+      },
+    });
+
+    if (!record) {
+      return res.status(404).json({ message: "운동 기록을 찾을 수 없습니다." });
+    }
+
+    res.status(200).json(record);
   })
 );
 

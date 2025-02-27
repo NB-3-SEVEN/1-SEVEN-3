@@ -1,11 +1,13 @@
 import express from "express";
-import { postGroup } from "../api/group.js";
+import { getGroups, postGroup } from "../api/group.js";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { CreateRecord } from "../struct.js";
 import { assert } from "superstruct";
 
+
 const prisma = new PrismaClient();
 const router = express.Router();
+router.route("/").get(getGroups).post(postGroup);
 
 const asyncHandler = (handler) => async (req, res) => {
   try {
@@ -21,6 +23,9 @@ const asyncHandler = (handler) => async (req, res) => {
     }
   }
 };
+
+
+
 
 // 운동 기록 등록
 router.post(
@@ -84,11 +89,6 @@ router.post(
   })
 );
 
-router.route("/").get((req, res) => {
-  res.status(200).send("Groups route is working!");
-});
-
-router.route("/").post(postGroup);
 
 // 그룹 운동 기록 목록 조회
 router.get(
@@ -249,6 +249,24 @@ router
     });
 
     res.json({ message: updatedGroup });
+  })
+  .delete("/:id", async (req, res) => {
+    const { id } = req.params;
+    const { ownerPassword } = req.body;
+
+    const group = await prisma.group.findUniqueOrThrow({
+      where: { id: parseInt(id, 10) },
+    });
+
+    if (group.ownerPassword !== ownerPassword) {
+      return res.status(401).json({ error: "Wrong password" });
+    }
+
+    const deletedGrop = await prisma.group.delete({
+      where: { id: parseInt(id, 10) },
+    });
+
+    res.json({ message: deletedGrop });
   });
 
 export default router;

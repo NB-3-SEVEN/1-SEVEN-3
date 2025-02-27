@@ -11,8 +11,8 @@ export const CreateGroup = s.object({
   description: s.optional(s.string()),
   photoUrl: s.optional(s.string()),
   goalRep: s.min(s.integer(), 1),
-  discordWebHookUrl: s.optional(s.size(), 1, 255),
-  discordInviteUrl: s.optional(s.size(), 1, 255),
+  discordWebHookUrl: s.optional(s.size(s.string(), 1, 255)),
+  discordInviteUrl: s.optional(s.size(s.string(), 1, 255)),
   likeCount: s.optional(s.min(s.integer), 0),
   tags: s.array(s.string()),
   ownerNickname: s.size(s.string(), 1, 20),
@@ -26,6 +26,7 @@ export const CreateRecord = s.object({
   description: s.optional(s.string()),
   time: s.min(s.integer(), 1),
   distance: s.min(s.integer(), 0),
-  photos: s.array(s.string()),
-  authorId: s.min(s.integer(), 1),
+  photos: s.size(s.array(s.string()), 0, 10), // 최대 10장까지 허용
+  authorNickname: s.size(s.string(), 1, 20),
+  authorPassword: s.size(s.string(), 8, 20),
 });

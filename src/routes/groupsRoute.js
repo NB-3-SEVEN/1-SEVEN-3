@@ -2,6 +2,7 @@ import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { CreateRecord } from "../struct.js";
 import { assert } from "superstruct";
+import { postGroup } from "../api/group.js";
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -67,5 +68,43 @@ router.post(
     res.status(201).send(record);
   })
 );
+
+router.route("/").post(postGroup);
+
+router
+  .post("/:groupId/likes", async (req, res) => {
+    const { groupId } = req.params;
+    const group = await prisma.group.findUnique({
+      where: {
+        id: parseInt(groupId),
+      },
+    });
+    const updateGroup = await prisma.group.update({
+      where: {
+        id: parseInt(groupId),
+      },
+      data: {
+        likeCount: group.likeCount + 1,
+      },
+    });
+    res.status(200).json(updateGroup);
+  })
+  .delete("/:groupId/likes", async (req, res) => {
+    const { groupId } = req.params;
+    const group = await prisma.group.findUnique({
+      where: {
+        id: parseInt(groupId),
+      },
+    });
+    const updateGroup = await prisma.group.update({
+      where: {
+        id: parseInt(groupId),
+      },
+      data: {
+        likeCount: group.likeCount - 1,
+      },
+    });
+    res.status(200).json(updateGroup);
+  });
 
 export default router;

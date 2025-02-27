@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Group" ALTER COLUMN "likeCount" DROP NOT NULL,
+ALTER COLUMN "likeCount" SET DEFAULT 0;

@@ -20,7 +20,7 @@ model Participant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   groupId   Int
-  records   Record?
+  records   Record[]
   group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
 }
 
@@ -50,7 +50,7 @@ model Record {
   time         Int
   distance     Int
   photos       String[]
-  authorId     Int          @unique
+  authorId     Int
   author       Participant  @relation(fields: [authorId], references: [id], onDelete: Cascade)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt

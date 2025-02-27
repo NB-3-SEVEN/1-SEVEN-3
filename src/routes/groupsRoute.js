@@ -1,11 +1,13 @@
 import express from "express";
-import { postGroup } from "../api/group.js";
+import { getGroups, postGroup } from "../api/group.js";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { CreateRecord } from "../struct.js";
 import { assert } from "superstruct";
 
+
 const prisma = new PrismaClient();
 const router = express.Router();
+router.route("/").get(getGroups).post(postGroup);
 
 const asyncHandler = (handler) => async (req, res) => {
   try {
@@ -21,6 +23,9 @@ const asyncHandler = (handler) => async (req, res) => {
     }
   }
 };
+
+
+
 
 // 운동 기록 등록
 router.post(
@@ -86,11 +91,6 @@ router.post(
   })
 );
 
-router.route("/").get((req, res) => {
-  res.status(200).send("Groups route is working!");
-});
-
-router.route("/").post(postGroup);
 
 router.get(
   "/:groupId/records",

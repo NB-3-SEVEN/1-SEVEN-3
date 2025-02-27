@@ -52,13 +52,19 @@ router.post(
     const record = await prisma.record.create({
       data: {
         exerciseType,
-        description: description || null, // description이 없으면 null 저장
+        description: description || null,
         time,
         distance,
         photos,
         authorId: participant.id,
       },
-      include: {
+      select: {
+        id: true,
+        exerciseType: true,
+        description: true,
+        time: true,
+        distance: true,
+        photos: true,
         author: {
           select: { id: true, nickname: true },
         },

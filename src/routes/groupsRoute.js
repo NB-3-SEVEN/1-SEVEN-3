@@ -1,4 +1,6 @@
 import express from "express";
+
+import { postGroup } from "../api/group.js";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -7,6 +9,8 @@ const router = express.Router();
 router.get("/", (req, res) => {
   res.status(200).send("Groups route is working!");
 });
+
+router.route("/").post(postGroup);
 
 router
   .post("/:groupId/likes", async (req, res) => {

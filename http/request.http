@@ -1,5 +1,5 @@
 ###
-POST http://localhost:3000/groups/1/records
+POST http://localhost:3000/groups/1000001/records
 Content-Type: application/json
 
 {

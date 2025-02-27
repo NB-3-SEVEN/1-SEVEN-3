@@ -20,6 +20,10 @@ const asyncHandler = (handler) => async (req, res) => {
 router.post(
   "/:groupId/records",
   asyncHandler(async (req, res) => {
+    if (isNaN(req.params.groupId)) {
+      return res.status(400).json({ message: "groupId must be integer" });
+    }
+
     assert(req.body, CreateRecord);
     const { groupId } = req.params;
     const {

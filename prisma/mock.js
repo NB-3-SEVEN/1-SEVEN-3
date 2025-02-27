@@ -1,33 +1,33 @@
 export const PARTICIPANTS = [
   {
-    id: 1,
+    id: 1000001,
     nickname: "길동",
     password: "password123",
     createdAt: "2023-07-16T09:00:00Z",
     updatedAt: "2023-07-16T09:00:00Z",
-    groupId: 1,
+    groupId: 1000001,
   },
   {
-    id: 2,
+    id: 1000002,
     nickname: "영희",
     password: "password456",
     createdAt: "2023-07-16T09:30:00Z",
     updatedAt: "2023-07-16T09:30:00Z",
-    groupId: 1,
+    groupId: 1000001,
   },
   {
-    id: 3,
+    id: 1000003,
     nickname: "철수",
     password: "password789",
     createdAt: "2023-07-16T10:00:00Z",
     updatedAt: "2023-07-16T10:00:00Z",
-    groupId: 2,
+    groupId: 1000002,
   },
 ];
 
 export const GROUPS = [
   {
-    id: 1,
+    id: 1000001,
     name: "운동 그룹 A",
     description: "건강한 삶을 위한 운동 그룹",
     photoUrl: "http://example.com/photoA.jpg",
@@ -43,7 +43,7 @@ export const GROUPS = [
     updatedAt: "2023-07-16T08:00:00Z",
   },
   {
-    id: 2,
+    id: 1000002,
     name: "운동 그룹 B",
     description: "다양한 운동을 즐기는 그룹",
     photoUrl: "http://example.com/photoB.jpg",
@@ -62,24 +62,24 @@ export const GROUPS = [
 
 export const RECORDS = [
   {
-    id: 1,
+    id: 1000001,
     exerciseType: "RUN",
     description: "아침 조깅",
     time: 30,
     distance: 5,
     photos: ["http://example.com/photo1.jpg"],
-    authorId: 1,
+    authorId: 1000001,
     createdAt: "2023-07-16T09:00:00Z",
     updatedAt: "2023-07-16T09:00:00Z",
   },
   {
-    id: 2,
+    id: 1000002,
     exerciseType: "BIKE",
     description: "자전거 라이딩",
     time: 60,
     distance: 20,
     photos: ["http://example.com/photo2.jpg"],
-    authorId: 2,
+    authorId: 1000002,
     createdAt: "2023-07-16T09:30:00Z",
     updatedAt: "2023-07-16T09:30:00Z",
   },

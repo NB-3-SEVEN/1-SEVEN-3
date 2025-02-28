@@ -25,6 +25,7 @@ export const CreateRecord = s.object({
   description: s.optional(s.string()),
   time: s.min(s.integer(), 1),
   distance: s.min(s.integer(), 0),
-  photos: s.array(s.string()),
-  authorId: s.min(s.integer(), 1),
+  photos: s.size(s.array(s.string()), 0, 10), // 최대 10장까지 허용
+  authorNickname: s.size(s.string(), 1, 20),
+  authorPassword: s.size(s.string(), 8, 20),
 });

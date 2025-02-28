@@ -35,7 +35,9 @@ export const GROUPS = [
     discordWebhookUrl: "http://discord.com/webhookA",
     discordInviteUrl: "http://discord.com/inviteA",
     likeCount: 10,
-    tags: ["운동", "건강"],
+    tags: {
+      connect: [{ id: 1 }, { id: 2 }],
+    },
     ownerNickname: "홍길동",
     ownerPassword: "ownerpass123",
     recordCount: 5,
@@ -51,7 +53,9 @@ export const GROUPS = [
     discordWebhookUrl: "http://discord.com/webhookB",
     discordInviteUrl: "http://discord.com/inviteB",
     likeCount: 20,
-    tags: ["팀워크", "운동"],
+    tags: {
+      connect: [{ id: 1 }, { id: 3 }],
+    },
     ownerNickname: "김영희",
     ownerPassword: "ownerpass456",
     recordCount: 3,
@@ -69,6 +73,7 @@ export const RECORDS = [
     distance: 5,
     photos: ["http://example.com/photo1.jpg"],
     authorId: 1000001,
+    groupId: 1000001,
     createdAt: "2023-07-16T09:00:00Z",
     updatedAt: "2023-07-16T09:00:00Z",
   },
@@ -80,7 +85,29 @@ export const RECORDS = [
     distance: 20,
     photos: ["http://example.com/photo2.jpg"],
     authorId: 1000002,
+    groupId: 1000002,
     createdAt: "2023-07-16T09:30:00Z",
     updatedAt: "2023-07-16T09:30:00Z",
+  },
+];
+
+export const TAGS = [
+  {
+    id: 1,
+    name: "운동",
+    createdAt: "2023-01-16T09:30:00Z",
+    updatedAt: "2023-02-16T09:30:00Z",
+  },
+  {
+    id: 2,
+    name: "건강",
+    createdAt: "2023-03-16T09:30:00Z",
+    updatedAt: "2023-04-16T09:30:00Z",
+  },
+  {
+    id: 3,
+    name: "팀워크",
+    createdAt: "2023-05-16T09:30:00Z",
+    updatedAt: "2023-06-16T09:30:00Z",
   },
 ];

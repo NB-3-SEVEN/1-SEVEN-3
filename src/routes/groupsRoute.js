@@ -197,14 +197,20 @@ router
         id: parseInt(groupId),
       },
     });
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
     const updateGroup = await prisma.group.update({
       where: {
         id: parseInt(groupId),
       },
       data: {
-        likeCount: group.likeCount + 1,
+        likeCount: (group.likeCount || 0) + 1, // 기본값을 0으로 설정
       },
     });
+
     res.status(200).json(updateGroup);
   })
   .delete("/:groupId/likes", async (req, res) => {
@@ -214,14 +220,20 @@ router
         id: parseInt(groupId),
       },
     });
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
     const updateGroup = await prisma.group.update({
       where: {
         id: parseInt(groupId),
       },
       data: {
-        likeCount: group.likeCount - 1,
+        likeCount: (group.likeCount || 0) - 1, // 기본값을 0으로 설정
       },
     });
+
     res.status(200).json(updateGroup);
   })
   .patch("/:id", async (req, res) => {

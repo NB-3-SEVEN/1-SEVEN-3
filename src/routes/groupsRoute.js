@@ -188,7 +188,7 @@ router.get(
     res.status(200).json(record);
   })
 );
-
+// 그룹 추천(좋아요)
 router
   .post("/:groupId/likes", async (req, res) => {
     const { groupId } = req.params;
@@ -224,13 +224,18 @@ router
     if (!group) {
       return res.status(404).json({ error: "Group not found" });
     }
+    if (group.likeCount <= 0) {
+      return res
+        .status(422)
+        .json({ message: "좋아요 수는 최소 0 이상이어야 합니다." });
+    }
 
     const updateGroup = await prisma.group.update({
       where: {
         id: parseInt(groupId),
       },
       data: {
-        likeCount: (group.likeCount || 0) - 1, // 기본값을 0으로 설정
+        likeCount: Math.max(0, group.likeCount - 1), // 기본값을 0으로 설정
       },
     });
 

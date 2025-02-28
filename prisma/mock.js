@@ -1,7 +1,7 @@
 export const PARTICIPANTS = [
   {
     id: 1000001,
-    nickname: "길동",
+    nickname: "홍길동",
     password: "password123",
     createdAt: "2023-07-16T09:00:00Z",
     updatedAt: "2023-07-16T09:00:00Z",
@@ -9,7 +9,7 @@ export const PARTICIPANTS = [
   },
   {
     id: 1000002,
-    nickname: "영희",
+    nickname: "김영희",
     password: "password456",
     createdAt: "2023-07-16T09:30:00Z",
     updatedAt: "2023-07-16T09:30:00Z",

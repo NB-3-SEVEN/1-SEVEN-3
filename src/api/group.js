@@ -99,9 +99,6 @@ export async function getGroup(req, res) {
     },
   });
 
-  console.log("yes");
-  console.log(ownerNickname);
-
   const owner = await prisma.participant.findUnique({
     where: {
       id: Number(groupId),

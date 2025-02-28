@@ -3,7 +3,6 @@ import * as s from "superstruct";
 export const CreateParticipant = s.object({
   nickname: s.size(s.string(), 1, 20),
   password: s.size(s.string(), 8, 20),
-  groupId: s.min(s.integer(), 1),
 });
 
 export const CreateGroup = s.object({
@@ -11,8 +10,8 @@ export const CreateGroup = s.object({
   description: s.optional(s.string()),
   photoUrl: s.optional(s.string()),
   goalRep: s.min(s.integer(), 1),
-  discordWebHookUrl: s.optional(s.size(), 1, 255),
-  discordInviteUrl: s.optional(s.size(), 1, 255),
+  discordWebHookUrl: s.optional(s.size(s.string(), 1, 255)),
+  discordInviteUrl: s.optional(s.size(s.string(), 1, 255)),
   likeCount: s.optional(s.min(s.integer), 0),
   tags: s.array(s.string()),
   ownerNickname: s.size(s.string(), 1, 20),

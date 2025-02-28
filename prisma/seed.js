@@ -29,7 +29,7 @@ async function main() {
       await prisma.group.update({
         where: { id: group.id },
         data: {
-          tags: {
+          tag: {
             connect: tagIds.map((id) => ({ id })),
           },
         },

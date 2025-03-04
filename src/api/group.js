@@ -101,7 +101,7 @@ export async function getGroups(req, res) {
       break;
   }
 
-  const group = await prisma.group.findMany({
+  const groups = await prisma.group.findMany({
     skip: (page - 1) * 6,
     take: Number(limit),
     orderBy: orderByParameter,
@@ -110,8 +110,58 @@ export async function getGroups(req, res) {
         contains: search,
       },
     },
+    include: {
+      tags: true,
+      participants: true,
+    },
   });
-  res.status(200).json(group);
+
+  const data = groups.map((group) => {
+    const owner = group.participants.find(
+      (p) => p.nickname === group.ownerNickname
+    );
+
+    const tags = group.tags.map((tag) => {
+      if (tag.groupId === group.id) {
+        return tag.name;
+      }
+    });
+    return {
+      id: group.id,
+      name: group.name,
+      description: group.description,
+      photoUrl: group.photoUrl,
+      goalRep: group.goalRep,
+      discordWebhookUrl: group.discordWebhookUrl,
+      discordInviteUrl: group.discordInviteUrl,
+      likeCount: group.likeCount,
+      tags: tags,
+      owner: {
+        id: owner.id,
+        nickname: owner.nickname,
+        createdAt: owner.createdAt,
+        updatedAt: owner.updatedAt,
+      },
+      participant: group.participants.map((participant) => {
+        return {
+          id: participant.id,
+          nickname: participant.nickname,
+          createdAt: participant.createdAt,
+          updatedAt: participant.updatedAt,
+        };
+      }),
+      createdAt: group.createdAt,
+      updatedAt: group.updatedAt,
+      badges: group.badges,
+    };
+  });
+
+  const json = {
+    data: data,
+    total: data.length,
+  };
+
+  res.status(200).json(json);
 }
 
 export async function getGroup(req, res) {

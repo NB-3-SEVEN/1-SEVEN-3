@@ -13,7 +13,7 @@ export const PARTICIPANTS = [
     password: "password456",
     createdAt: "2023-07-16T09:30:00Z",
     updatedAt: "2023-07-16T09:30:00Z",
-    groupId: 1000001,
+    groupId: 1000002,
   },
   {
     id: 1000003,

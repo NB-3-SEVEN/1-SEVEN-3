@@ -125,7 +125,7 @@ export async function getGroup(req, res) {
   });
 
   const json = {
-    group,
+    ...group,
     owner,
     participant,
   };

@@ -12,138 +12,136 @@ router.route("/").get(asyncHandler(getGroups)).post(asyncHandler(postGroup));
 router.route("/:groupId").get(asyncHandler(getGroup));
 
 // 운동 기록 등록
-router.post(
-  "/:groupId/records",
-  asyncHandler(async (req, res) => {
-    if (isNaN(req.params.groupId)) {
-      return res.status(400).json({ message: "groupId must be integer" });
-    }
+router
+  .route("/:groupId/records")
+  .post(
+    asyncHandler(async (req, res) => {
+      if (isNaN(req.params.groupId)) {
+        return res.status(400).json({ message: "groupId must be integer" });
+      }
 
-    assert(req.body, CreateRecord);
-    const { groupId } = req.params;
-    const {
-      exerciseType,
-      description,
-      time,
-      distance,
-      photos,
-      authorNickname,
-      authorPassword,
-    } = req.body;
-
-    const participant = await prisma.participant.findFirst({
-      where: {
-        nickname: authorNickname,
-        password: authorPassword,
-        groupId: Number(groupId),
-      },
-      include: { group: true },
-    });
-
-    if (!participant) {
-      return res
-        .status(403)
-        .send({ message: "그룹에 등록된 참가자가 아닙니다." });
-    }
-
-    const record = await prisma.record.create({
-      data: {
+      assert(req.body, CreateRecord);
+      const { groupId } = req.params;
+      const {
         exerciseType,
-        description: description || null,
+        description,
         time,
         distance,
         photos,
-        authorId: participant.id,
-        groupId: participant.group.id,
-      },
-      select: {
-        id: true,
-        exerciseType: true,
-        description: true,
-        time: true,
-        distance: true,
-        photos: true,
-        author: {
-          select: { id: true, nickname: true },
+        authorNickname,
+        authorPassword,
+      } = req.body;
+
+      const participant = await prisma.participant.findFirst({
+        where: {
+          nickname: authorNickname,
+          password: authorPassword,
+          groupId: Number(groupId),
         },
-      },
-    });
+        include: { group: true },
+      });
 
-    res.status(201).send(record);
-  })
-);
+      if (!participant) {
+        return res
+          .status(403)
+          .send({ message: "그룹에 등록된 참가자가 아닙니다." });
+      }
 
-// 그룹 운동 기록 목록 조회
-router.get(
-  "/:groupId/records",
-  asyncHandler(async (req, res) => {
-    const { groupId } = req.params;
-    const {
-      page = 1,
-      limit = 10,
-      order = "desc",
-      orderBy = "createdAt",
-      search = "",
-    } = req.query;
-
-    const offset = (page - 1) * limit;
-
-    let orderByField;
-    switch (orderBy) {
-      case "time":
-        orderByField = { time: order };
-        break;
-      case "createdAt":
-        orderByField = { createdAt: order };
-        break;
-      default:
-        orderByField = { createdAt: "desc" };
-    }
-
-    const where = search
-      ? {
-          groupId: parseInt(groupId),
+      const record = await prisma.record.create({
+        data: {
+          exerciseType,
+          description: description || null,
+          time,
+          distance,
+          photos,
+          authorId: participant.id,
+          groupId: participant.group.id,
+        },
+        select: {
+          id: true,
+          exerciseType: true,
+          description: true,
+          time: true,
+          distance: true,
+          photos: true,
           author: {
-            nickname: {
-              contains: search,
-              mode: "insensitive",
+            select: { id: true, nickname: true },
+          },
+        },
+      });
+
+      res.status(201).send(record);
+    })
+  )
+  .get(
+    // 그룹 운동 기록 목록 조회
+    asyncHandler(async (req, res) => {
+      const { groupId } = req.params;
+      const {
+        page = 1,
+        limit = 10,
+        order = "desc",
+        orderBy = "createdAt",
+        search = "",
+      } = req.query;
+
+      const offset = (page - 1) * limit;
+
+      let orderByField;
+      switch (orderBy) {
+        case "time":
+          orderByField = { time: order };
+          break;
+        case "createdAt":
+          orderByField = { createdAt: order };
+          break;
+        default:
+          orderByField = { createdAt: "desc" };
+      }
+
+      const where = search
+        ? {
+            groupId: parseInt(groupId),
+            author: {
+              nickname: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+          }
+        : { groupId: parseInt(groupId) };
+
+      const records = await prisma.record.findMany({
+        where,
+        orderBy: orderByField,
+        skip: offset,
+        take: limit,
+        select: {
+          id: true,
+          exerciseType: true,
+          description: true,
+          time: true,
+          distance: true,
+          photos: true,
+          author: {
+            select: {
+              id: true,
+              nickname: true,
             },
           },
-        }
-      : { groupId: parseInt(groupId) };
-
-    const records = await prisma.record.findMany({
-      where,
-      orderBy: orderByField,
-      skip: offset,
-      take: limit,
-      select: {
-        id: true,
-        exerciseType: true,
-        description: true,
-        time: true,
-        distance: true,
-        photos: true,
-        author: {
-          select: {
-            id: true,
-            nickname: true,
-          },
         },
-      },
-    });
+      });
 
-    const total = await prisma.record.count({
-      where,
-    });
+      const total = await prisma.record.count({
+        where,
+      });
 
-    res.send({ data: records, total });
-  })
-);
+      res.send({ data: records, total });
+    })
+  );
 
 // 그룹 운동 기록 상세 조회
-router.get(
-  "/:groupId/records/:recordId",
+router.route("/:groupId/records/:recordId").get(
   asyncHandler(async (req, res) => {
     const { groupId, recordId } = req.params;
 
@@ -177,8 +175,8 @@ router.get(
 );
 
 router
+  .route("/:groupId/likes")
   .post(
-    "/:groupId/likes",
     asyncHandler(async (req, res) => {
       const { groupId } = req.params;
       const group = await prisma.group.findUnique({
@@ -198,7 +196,6 @@ router
     })
   )
   .delete(
-    "/:groupId/likes",
     asyncHandler(async (req, res) => {
       const { groupId } = req.params;
       const group = await prisma.group.findUnique({
@@ -216,9 +213,11 @@ router
       });
       res.status(200).json(updateGroup);
     })
-  )
+  );
+
+router
+  .route("/:id")
   .patch(
-    "/:id",
     asyncHandler(async (req, res) => {
       const { id } = req.params;
       const { ownerPassword, goalRep, ...updateData } = req.body;
@@ -248,7 +247,6 @@ router
     })
   )
   .delete(
-    "/:id",
     asyncHandler(async (req, res) => {
       const { id } = req.params;
       const { ownerPassword } = req.body;
@@ -267,9 +265,11 @@ router
 
       res.json({ message: deletedGrop });
     })
-  )
+  );
+
+router
+  .route("/:id/participants")
   .post(
-    "/:id/participants",
     asyncHandler(async (req, res) => {
       const { id: groupId } = req.params;
       const { nickname, password } = req.body;
@@ -314,7 +314,6 @@ router
     })
   )
   .delete(
-    "/:id/participants",
     asyncHandler(async (req, res) => {
       const { id } = req.params;
       const { nickname, password } = req.body;

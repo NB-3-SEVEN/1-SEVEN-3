@@ -6,7 +6,22 @@ const prisma = new PrismaClient();
 
 router
   .get("/", async (req, res) => {
+    const { page = 1, limit = 10, order = "desc", search = "" } = req.query;
+    let orderBy = { createdAt: "desc" };
+    if (order === "oldest") {
+      orderBy = { createdAt: "asc" };
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     const tags = await prisma.tag.findMany({
+      skip: skip,
+      take: parseInt(limit),
+      orderBy: orderBy,
+      where: {
+        name: {
+          contains: search,
+        },
+      },
       select: {
         id: true,
         name: true,
@@ -14,7 +29,15 @@ router
         updatedAt: true,
       },
     });
-    res.status(200).json({ data: tags, total: tags.length });
+    const total = await prisma.tag.count({
+      where: {
+        name: {
+          contains: search,
+        },
+      },
+    });
+    res.status(200).json({ data: tags, total: total });
+    console.log(tags);
   })
   .get("/:tagId", async (req, res) => {
     const tagId = Number(req.params.tagId);

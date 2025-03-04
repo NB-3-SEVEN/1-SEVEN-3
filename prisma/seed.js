@@ -8,7 +8,7 @@ async function main() {
   await prisma.record.deleteMany();
   await prisma.participant.deleteMany();
   await prisma.group.deleteMany();
-  await prisma.tags.deleteMany();
+  await prisma.tag.deleteMany();
 
   await prisma.tag.createMany({
     data: TAGS,

@@ -41,7 +41,7 @@ model Group {
   updatedAt         DateTime      @updatedAt
   participants      Participant[]
   Record            Record[]
-  tag               Tag[]         @relation("GroupTags")
+  tags              Tag[]         @relation("GroupTags")
 }
 
 model Record {
@@ -63,7 +63,7 @@ model Tag {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
   groupId   Int?
   group     Group?   @relation("GroupTags", fields: [groupId], references: [id], onDelete: Cascade)
 }

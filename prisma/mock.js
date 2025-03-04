@@ -85,7 +85,7 @@ export const RECORDS = [
     distance: 20,
     photos: ["http://example.com/photo2.jpg"],
     authorId: 1000002,
-    groupId: 1000002,
+    groupId: 1000001,
     createdAt: "2023-07-16T09:30:00Z",
     updatedAt: "2023-07-16T09:30:00Z",
   },

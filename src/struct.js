@@ -12,12 +12,9 @@ export const CreateGroup = s.object({
   goalRep: s.min(s.integer(), 1),
   discordWebHookUrl: s.optional(s.size(s.string(), 1, 255)),
   discordInviteUrl: s.optional(s.size(s.string(), 1, 255)),
-  likeCount: s.optional(s.min(s.integer), 0),
   tags: s.array(s.string()),
   ownerNickname: s.size(s.string(), 1, 20),
   ownerPassword: s.size(s.string(), 8, 20),
-  badges: s.array(s.enums(["PARTICIPATION_10", "RECORD_100", "LIKE_100"])),
-  recordCount: s.optional(s.min(s.integer(), 0)),
 });
 
 export const CreateRecord = s.object({

@@ -61,9 +61,9 @@ model Record {
 
 model Tag {
   id        Int      @id @default(autoincrement())
-  name      String   @unique
+  name      String
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
   groupId   Int?
   group     Group?   @relation("GroupTags", fields: [groupId], references: [id], onDelete: Cascade)
 }

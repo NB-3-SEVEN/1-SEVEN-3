@@ -1,30 +1,55 @@
 import { PrismaClient } from "@prisma/client";
-import { json } from "express";
+import { assert } from "superstruct";
+import { CreateGroup } from "../struct.js";
 
 const prisma = new PrismaClient();
 
 export async function postGroup(req, res) {
-  const body = req.body;
-  const group = await prisma.group.create({
-    data: body,
-  });
+  assert(req.body, CreateGroup);
+  await prisma.$transaction(async (prisma) => {
+    const body = req.body;
+    const group = await prisma.group.create({
+      data: {
+        name: body.name,
+        description: body.description,
+        photoUrl: body.photoUrl,
+        goalRep: body.goalRep,
+        discordWebhookUrl: body.discordWebhookUrl,
+        discordInviteUrl: body.discordInviteUrl,
+        ownerNickname: body.ownerNickname,
+        ownerPassword: body.ownerPassword,
+      },
+    });
 
-  const participant = new Array();
-  participant[0] = await prisma.participant.create({
-    data: {
-      nickname: body.ownerNickname,
-      password: body.ownerPassword,
-      groupId: group.id,
-    },
-  });
+    const participant = new Array();
+    participant[0] = await prisma.participant.create({
+      data: {
+        nickname: body.ownerNickname,
+        password: body.ownerPassword,
+        groupId: group.id,
+      },
+    });
 
-  const json = {
-    //group 과 particpant 합쳐서 응답하기
-    ...group,
-    owner: participant[0],
-    participant: participant,
-  };
-  res.status(201).json(json);
+    const tagsName = body.tags.map((tag) => {
+      return {
+        name: tag,
+        groupId: group.id,
+      };
+    });
+
+    await prisma.tag.createMany({
+      data: tagsName,
+    });
+    const json = {
+      //tags와 group 과 particpants 합쳐서 응답하기
+      ...group,
+      tags: body.tags,
+      owner: participant[0],
+      participant: participant,
+    };
+
+    res.status(201).json(json);
+  });
 }
 
 export async function getGroups(req, res) {

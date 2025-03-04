@@ -1,8 +1,7 @@
 import express from "express";
-import { getGroup, getGroups, postGroup } from "../api/group.js";
+import { getGroup, getGroups, getRank, postGroup } from "../api/group.js";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { CreateParticipant, CreateRecord } from "../struct.js";
-import { formatGroupResponse } from "../utils/groupFromatter.js";
 import { assert } from "superstruct";
 import { asyncHandler } from "../asyncHandler.js";
 
@@ -10,6 +9,7 @@ const prisma = new PrismaClient();
 const router = express.Router();
 router.route("/").get(asyncHandler(getGroups)).post(asyncHandler(postGroup));
 router.route("/:groupId").get(asyncHandler(getGroup));
+router.route("/:groupId/rank/").get(asyncHandler(getRank));
 
 // 운동 기록 등록
 router
@@ -174,6 +174,66 @@ router.route("/:groupId/records/:recordId").get(
   })
 );
 
+// 그룹 추천(좋아요)
+router
+  .post("/:groupId/likes", async (req, res) => {
+    const { groupId } = req.params;
+    const group = await prisma.group.findUnique({
+      where: {
+        id: parseInt(groupId),
+      },
+      select: { likeCount: true, badges: true },
+    });
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    // likeCount 증가
+    let updatedData = {
+      likeCount: (group.likeCount || 0) + 1,
+    };
+
+    if (updatedData.likeCount >= 100 && group.badges !== "LIKE_100") {
+      updatedData.badges = "LIKE_100"; //
+    }
+
+    const updatedGroup = await prisma.group.update({
+      where: { id: parseInt(groupId) },
+      data: updatedData,
+    });
+
+    res.status(200).json(updatedGroup);
+  })
+  .delete("/:groupId/likes", async (req, res) => {
+    const { groupId } = req.params;
+    const group = await prisma.group.findUnique({
+      where: {
+        id: parseInt(groupId),
+      },
+    });
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+    if (group.likeCount <= 0) {
+      return res
+        .status(422)
+        .json({ message: "좋아요 수는 최소 0 이상이어야 합니다." });
+    }
+
+    const updateGroup = await prisma.group.update({
+      where: {
+        id: parseInt(groupId),
+      },
+      data: {
+        likeCount: Math.max(0, group.likeCount - 1), // 기본값을 0으로 설정
+      },
+    });
+
+    res.status(200).json(updateGroup);
+  });
+
 router
   .route("/:groupId/likes")
   .post(
@@ -219,10 +279,10 @@ router
   .route("/:id")
   .patch(
     asyncHandler(async (req, res) => {
-      const { id } = req.params;
+      const { id: groupId } = req.params;
       const { ownerPassword, goalRep, ...updateData } = req.body;
       const group = await prisma.group.findFirstOrThrow({
-        where: { id: parseInt(id, 10) },
+        where: { id: parseInt(groupId, 10) },
       });
 
       if (group.ownerPassword !== ownerPassword) {
@@ -234,16 +294,42 @@ router
       }
 
       const updatedGroup = await prisma.group.update({
-        where: { id: parseInt(id, 10) },
+        where: { id: parseInt(groupId, 10) },
         data: { ...updateData, goalRep },
-        include: {
-          participants: true,
+      });
+
+      const groups = await prisma.group.findUniqueOrThrow({
+        where: { id: parseInt(groupId, 10) },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          photoUrl: true,
+          goalRep: true,
+          discordWebhookUrl: true,
+          discordInviteUrl: true,
+          likeCount: true,
+          tags: { select: { name: true } },
+          createdAt: true,
+          updatedAt: true,
+          badges: true,
         },
       });
 
-      const response = formatGroupResponse(updatedGroup);
+      const owner = await prisma.participant.findFirst({
+        where: {
+          nickname: updatedGroup.ownerNickname,
+          groupId: updatedGroup.id,
+        },
+        select: { id: true, nickname: true, createdAt: true, updatedAt: true },
+      });
 
-      res.json({ message: response });
+      const participants = await prisma.participant.findMany({
+        where: { groupId: parseInt(groupId, 10) },
+        select: { id: true, nickname: true, createdAt: true, updatedAt: true },
+      });
+
+      res.json({ ...groups, owner, participants });
     })
   )
   .delete(
@@ -266,7 +352,6 @@ router
       res.json({ message: deletedGrop });
     })
   );
-
 router
   .route("/:id/participants")
   .post(
@@ -294,23 +379,41 @@ router
 
       const group = await prisma.group.findUniqueOrThrow({
         where: { id: parseInt(groupId, 10) },
-        include: {
-          participants: {
-            select: {
-              id: true,
-              nickname: true,
-              createdAt: true,
-              updatedAt: true,
-            },
-          },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          photoUrl: true,
+          goalRep: true,
+          discordWebhookUrl: true,
+          discordInviteUrl: true,
+          likeCount: true,
+          tags: { select: { name: true } },
+          createdAt: true,
+          updatedAt: true,
+          badges: true,
         },
       });
 
-      console.log("참가자 목록:", group.participants);
+      const ownerNickname = await prisma.group.findUnique({
+        where: { id: parseInt(groupId, 10) },
+        select: { ownerNickname: true },
+      });
 
-      const response = formatGroupResponse(group);
+      const owner = await prisma.participant.findFirst({
+        where: {
+          nickname: ownerNickname.ownerNickname,
+          groupId: parseInt(groupId, 10),
+        },
+        select: { id: true, nickname: true, createdAt: true, updatedAt: true },
+      });
 
-      res.json({ message: response });
+      const participants = await prisma.participant.findMany({
+        where: { groupId: parseInt(groupId, 10) },
+        select: { id: true, nickname: true, createdAt: true, updatedAt: true },
+      });
+
+      res.json({ ...group, owner, participants });
     })
   )
   .delete(

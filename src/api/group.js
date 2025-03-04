@@ -1,30 +1,76 @@
 import { PrismaClient } from "@prisma/client";
-import { json } from "express";
+import { assert } from "superstruct";
+import { CreateGroup } from "../struct.js";
 
 const prisma = new PrismaClient();
 
 export async function postGroup(req, res) {
-  const body = req.body;
-  const group = await prisma.group.create({
-    data: body,
-  });
+  assert(req.body, CreateGroup);
+  await prisma.$transaction(async (prisma) => {
+    const body = req.body;
+    const group = await prisma.group.create({
+      data: {
+        name: body.name,
+        description: body.description,
+        photoUrl: body.photoUrl,
+        goalRep: body.goalRep,
+        discordWebhookUrl: body.discordWebhookUrl,
+        discordInviteUrl: body.discordInviteUrl,
+        ownerNickname: body.ownerNickname,
+        ownerPassword: body.ownerPassword,
+      },
+    });
 
-  const participant = new Array();
-  participant[0] = await prisma.participant.create({
-    data: {
-      nickname: body.ownerNickname,
-      password: body.ownerPassword,
-      groupId: group.id,
-    },
-  });
+    const participant = await prisma.participant.create({
+      data: {
+        nickname: body.ownerNickname,
+        password: body.ownerPassword,
+        groupId: group.id,
+      },
+    });
 
-  const json = {
-    //group 과 particpant 합쳐서 응답하기
-    ...group,
-    owner: participant[0],
-    participant: participant,
-  };
-  res.status(201).json(json);
+    const tagsName = body.tags.map((tag) => {
+      return {
+        name: tag,
+        groupId: group.id,
+      };
+    });
+
+    await prisma.tag.createMany({
+      data: tagsName,
+    });
+    const json = {
+      //tags와 group 과 particpants 합쳐서 응답하기
+      id: group.id,
+      name: group.name,
+      description: group.description,
+      photoUrl: group.photoUrl,
+      goalRep: group.goalRep,
+      discordWebhookUrl: group.discordWebhookUrl,
+      discordInviteUrl: group.discordInviteUrl,
+      likeCount: group.likeCount,
+      tags: body.tags,
+      owner: {
+        id: participant.id,
+        nickname: participant.nickname,
+        createdAt: participant.createdAt,
+        updatedAt: participant.updatedAt,
+      },
+      participant: [
+        {
+          id: participant.id,
+          nickname: participant.nickname,
+          createdAt: participant.createdAt,
+          updatedAt: participant.updatedAt,
+        },
+      ],
+      createdAt: group.createdAt,
+      updatedAt: group.updatedAt,
+      badges: group.badges,
+    };
+
+    res.status(201).json(json);
+  });
 }
 
 export async function getGroups(req, res) {
@@ -175,7 +221,7 @@ export async function getGroup(req, res) {
   });
 
   const json = {
-    group,
+    ...group,
     owner,
     participant,
   };
@@ -199,16 +245,24 @@ export async function getRank(req, res) {
 
   const rank = participants.map((participant) => {
     let recordSum = 0;
+    let outdatedRecordCount = 0;
     participant.records.forEach((record) => {
       const date = new Date(record.createdAt);
-      console.log(record.createdAt);
-      console.log(date.getTime());
-      recordSum += Number(record.time);
+      const dateNow = new Date();
+      if (duration === "weekly") {
+        if (dateNow.getTime() - date.getTime() <= 7 * 24 * 60 * 60 * 1000) {
+          recordSum += Number(record.time);
+        } else outdatedRecordCount++;
+      } else {
+        if (dateNow.getTime() - date.getTime() <= 30 * 24 * 60 * 60 * 1000) {
+          recordSum += Number(record.time);
+        } else outdatedRecordCount++;
+      }
     });
     return {
       participantId: participant.id,
       nickname: participant.nickname,
-      recordCount: participant.records.length,
+      recordCount: participant.records.length - outdatedRecordCount,
       recordTime: recordSum,
     };
   });

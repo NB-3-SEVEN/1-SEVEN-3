@@ -1,5 +1,5 @@
 import express from "express";
-import { getGroup, getGroups, postGroup } from "../api/group.js";
+import { getGroup, getGroups, getRank, postGroup } from "../api/group.js";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { CreateRecord } from "../struct.js";
 import { assert } from "superstruct";
@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 const router = express.Router();
 router.route("/").get(getGroups).post(postGroup);
 router.route("/:groupId").get(getGroup);
+router.route("/:groupId/rank/").get(getRank);
 
 const asyncHandler = (handler) => async (req, res) => {
   try {

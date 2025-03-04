@@ -41,7 +41,7 @@ model Group {
   updatedAt         DateTime      @updatedAt
   participants      Participant[]
   Record            Record[]
-  tag               Tag[]         @relation("GroupTags")
+  tags              Tag[]         @relation("GroupTags")
 }
 
 model Record {

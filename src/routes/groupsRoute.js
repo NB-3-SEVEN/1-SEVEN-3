@@ -1,7 +1,8 @@
 import express from "express";
 import { getGroup, getGroups, getRank, postGroup } from "../api/group.js";
 import { PrismaClient, Prisma } from "@prisma/client";
-import { CreateRecord } from "../struct.js";
+import { CreateParticipant, CreateRecord } from "../struct.js";
+import { formatGroupResponse } from "../utils/groupFromatter.js";
 import { assert } from "superstruct";
 
 const prisma = new PrismaClient();
@@ -189,7 +190,7 @@ router.get(
     res.status(200).json(record);
   })
 );
-
+// 그룹 추천(좋아요)
 router
   .post("/:groupId/likes", async (req, res) => {
     const { groupId } = req.params;
@@ -198,14 +199,20 @@ router
         id: parseInt(groupId),
       },
     });
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
     const updateGroup = await prisma.group.update({
       where: {
         id: parseInt(groupId),
       },
       data: {
-        likeCount: group.likeCount + 1,
+        likeCount: (group.likeCount || 0) + 1, // 기본값을 0으로 설정
       },
     });
+
     res.status(200).json(updateGroup);
   })
   .delete("/:groupId/likes", async (req, res) => {
@@ -215,14 +222,25 @@ router
         id: parseInt(groupId),
       },
     });
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+    if (group.likeCount <= 0) {
+      return res
+        .status(422)
+        .json({ message: "좋아요 수는 최소 0 이상이어야 합니다." });
+    }
+
     const updateGroup = await prisma.group.update({
       where: {
         id: parseInt(groupId),
       },
       data: {
-        likeCount: group.likeCount - 1,
+        likeCount: Math.max(0, group.likeCount - 1), // 기본값을 0으로 설정
       },
     });
+
     res.status(200).json(updateGroup);
   })
   .patch("/:id", async (req, res) => {
@@ -243,9 +261,14 @@ router
     const updatedGroup = await prisma.group.update({
       where: { id: parseInt(id, 10) },
       data: { ...updateData, goalRep },
+      include: {
+        participants: true,
+      },
     });
 
-    res.json({ message: updatedGroup });
+    const response = formatGroupResponse(updatedGroup);
+
+    res.json({ message: response });
   })
   .delete("/:id", async (req, res) => {
     const { id } = req.params;
@@ -264,6 +287,70 @@ router
     });
 
     res.json({ message: deletedGrop });
+  })
+  .post("/:id/participants", async (req, res) => {
+    const { id: groupId } = req.params;
+    const { nickname, password } = req.body;
+
+    assert(req.body, CreateParticipant);
+
+    const existingParticipant = await prisma.participant.findFirst({
+      where: { nickname, groupId: parseInt(groupId, 10) },
+    });
+
+    if (existingParticipant) {
+      return res.status(400).json({ message: "nickname is required" });
+    }
+
+    await prisma.participant.create({
+      data: {
+        nickname,
+        password,
+        group: { connect: { id: parseInt(groupId, 10) } },
+      },
+    });
+
+    const group = await prisma.group.findUniqueOrThrow({
+      where: { id: parseInt(groupId, 10) },
+      include: {
+        participants: {
+          select: {
+            id: true,
+            nickname: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+
+    console.log("참가자 목록:", group.participants);
+
+    const response = formatGroupResponse(group);
+
+    res.json({ message: response });
+  })
+  .delete("/:id/participants", async (req, res) => {
+    const { id } = req.params;
+    const { nickname, password } = req.body;
+
+    const participant = await prisma.participant.findUniqueOrThrow({
+      where: { id: parseInt(id, 10) },
+    });
+
+    if (participant.nickname !== nickname) {
+      return res.status(400).json({ error: "nickname is required" });
+    }
+
+    if (participant.password !== password) {
+      return res.status(401).json({ error: "Wrong password" });
+    }
+
+    const deletedParticipant = await prisma.participant.delete({
+      where: { id: parseInt(id, 10) },
+    });
+
+    res.json({ message: deletedParticipant });
   });
 
 export default router;

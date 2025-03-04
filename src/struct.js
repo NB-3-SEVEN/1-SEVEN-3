@@ -3,7 +3,6 @@ import * as s from "superstruct";
 export const CreateParticipant = s.object({
   nickname: s.size(s.string(), 1, 20),
   password: s.size(s.string(), 8, 20),
-  groupId: s.min(s.integer(), 1),
 });
 
 export const CreateGroup = s.object({

@@ -10,7 +10,7 @@ export const CreateGroup = s.object({
   description: s.optional(s.string()),
   photoUrl: s.optional(s.string()),
   goalRep: s.min(s.integer(), 1),
-  discordWebHookUrl: s.optional(s.size(s.string(), 1, 255)),
+  discordWebhookUrl: s.optional(s.size(s.string(), 1, 255)),
   discordInviteUrl: s.optional(s.size(s.string(), 1, 255)),
   tags: s.array(s.string()),
   ownerNickname: s.size(s.string(), 1, 20),

@@ -21,8 +21,7 @@ export async function postGroup(req, res) {
       },
     });
 
-    const participant = new Array();
-    participant[0] = await prisma.participant.create({
+    const participant = await prisma.participant.create({
       data: {
         nickname: body.ownerNickname,
         password: body.ownerPassword,
@@ -42,10 +41,32 @@ export async function postGroup(req, res) {
     });
     const json = {
       //tags와 group 과 particpants 합쳐서 응답하기
-      ...group,
+      id: group.id,
+      name: group.name,
+      description: group.description,
+      photoUrl: group.photoUrl,
+      goalRep: group.goalRep,
+      discordWebhookUrl: group.discordWebhookUrl,
+      discordInviteUrl: group.discordInviteUrl,
+      likeCount: group.likeCount,
       tags: body.tags,
-      owner: participant[0],
-      participant: participant,
+      owner: {
+        id: participant.id,
+        nickname: participant.nickname,
+        createdAt: participant.createdAt,
+        updatedAt: participant.updatedAt,
+      },
+      participant: [
+        {
+          id: participant.id,
+          nickname: participant.nickname,
+          createdAt: participant.createdAt,
+          updatedAt: participant.updatedAt,
+        },
+      ],
+      createdAt: group.createdAt,
+      updatedAt: group.updatedAt,
+      badges: group.badges,
     };
 
     res.status(201).json(json);

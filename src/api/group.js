@@ -132,3 +132,38 @@ export async function getGroup(req, res) {
 
   res.status(200).json(json);
 }
+
+export async function getRank(req, res) {
+  const { groupId } = req.params;
+  const { duration = "monthly" } = req.query;
+  const participants = await prisma.participant.findMany({
+    where: {
+      groupId: Number(groupId),
+    },
+    select: {
+      id: true,
+      nickname: true,
+      records: true,
+    },
+  });
+
+  const rank = participants.map((participant) => {
+    let recordSum = 0;
+    participant.records.forEach((record) => {
+      const date = new Date(record.createdAt);
+      console.log(record.createdAt);
+      console.log(date.getTime());
+      recordSum += Number(record.time);
+    });
+    return {
+      participantId: participant.id,
+      nickname: participant.nickname,
+      recordCount: participant.records.length,
+      recordTime: recordSum,
+    };
+  });
+
+  const json = rank.sort((a, b) => b.recordCount - a.recordCount);
+
+  res.status(200).json(json);
+}

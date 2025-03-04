@@ -1,19 +1,15 @@
 import express from "express";
-
-import { getGroup, getGroups, postGroup } from "../api/group.js";
+import { getGroup, getGroups, getRank, postGroup } from "../api/group.js";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { CreateParticipant, CreateRecord } from "../struct.js";
 import { formatGroupResponse } from "../utils/groupFromatter.js";
 import { assert } from "superstruct";
 
-
-
-
-
 const prisma = new PrismaClient();
 const router = express.Router();
 router.route("/").get(getGroups).post(postGroup);
 router.route("/:groupId").get(getGroup);
+router.route("/:groupId/rank/").get(getRank);
 
 const asyncHandler = (handler) => async (req, res) => {
   try {
@@ -246,7 +242,8 @@ router
     });
 
     res.status(200).json(updateGroup);
-  }).patch("/:id", async (req, res) => {
+  })
+  .patch("/:id", async (req, res) => {
     const { id } = req.params;
     const { ownerPassword, goalRep, ...updateData } = req.body;
     const group = await prisma.group.findFirstOrThrow({
@@ -265,11 +262,11 @@ router
       where: { id: parseInt(id, 10) },
       data: { ...updateData, goalRep },
       include: {
-        participants:true,
+        participants: true,
       },
     });
 
-    const response = formatGroupResponse(updatedGroup)
+    const response = formatGroupResponse(updatedGroup);
 
     res.json({ message: response });
   })
@@ -290,8 +287,8 @@ router
     });
 
     res.json({ message: deletedGrop });
-
-  }).post("/:id/participants", async (req, res) => {
+  })
+  .post("/:id/participants", async (req, res) => {
     const { id: groupId } = req.params;
     const { nickname, password } = req.body;
 
@@ -354,6 +351,6 @@ router
     });
 
     res.json({ message: deletedParticipant });
-  })
+  });
 
 export default router;

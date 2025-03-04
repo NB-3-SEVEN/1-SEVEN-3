@@ -195,16 +195,24 @@ export async function getRank(req, res) {
 
   const rank = participants.map((participant) => {
     let recordSum = 0;
+    let outdatedRecordCount = 0;
     participant.records.forEach((record) => {
       const date = new Date(record.createdAt);
-      console.log(record.createdAt);
-      console.log(date.getTime());
-      recordSum += Number(record.time);
+      const dateNow = new Date();
+      if (duration === "weekly") {
+        if (dateNow.getTime() - date.getTime() <= 7 * 24 * 60 * 60 * 1000) {
+          recordSum += Number(record.time);
+        } else outdatedRecordCount++;
+      } else {
+        if (dateNow.getTime() - date.getTime() <= 30 * 24 * 60 * 60 * 1000) {
+          recordSum += Number(record.time);
+        } else outdatedRecordCount++;
+      }
     });
     return {
       participantId: participant.id,
       nickname: participant.nickname,
-      recordCount: participant.records.length,
+      recordCount: participant.records.length - outdatedRecordCount,
       recordTime: recordSum,
     };
   });

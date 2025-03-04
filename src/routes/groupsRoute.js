@@ -1,8 +1,7 @@
 import express from "express";
-import { getGroup, getGroups, postGroup } from "../api/group.js";
+import { getGroup, getGroups, getRank, postGroup } from "../api/group.js";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { CreateParticipant, CreateRecord } from "../struct.js";
-import { formatGroupResponse } from "../utils/groupFromatter.js";
 import { assert } from "superstruct";
 import { asyncHandler } from "../asyncHandler.js";
 
@@ -10,6 +9,7 @@ const prisma = new PrismaClient();
 const router = express.Router();
 router.route("/").get(asyncHandler(getGroups)).post(asyncHandler(postGroup));
 router.route("/:groupId").get(asyncHandler(getGroup));
+router.route("/:groupId/rank/").get(asyncHandler(getRank));
 
 // 운동 기록 등록
 router
@@ -279,10 +279,10 @@ router
   .route("/:id")
   .patch(
     asyncHandler(async (req, res) => {
-      const { id } = req.params;
+      const { id: groupId } = req.params;
       const { ownerPassword, goalRep, ...updateData } = req.body;
       const group = await prisma.group.findFirstOrThrow({
-        where: { id: parseInt(id, 10) },
+        where: { id: parseInt(groupId, 10) },
       });
 
       if (group.ownerPassword !== ownerPassword) {
@@ -294,16 +294,42 @@ router
       }
 
       const updatedGroup = await prisma.group.update({
-        where: { id: parseInt(id, 10) },
+        where: { id: parseInt(groupId, 10) },
         data: { ...updateData, goalRep },
-        include: {
-          participants: true,
+      });
+
+      const groups = await prisma.group.findUniqueOrThrow({
+        where: { id: parseInt(groupId, 10) },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          photoUrl: true,
+          goalRep: true,
+          discordWebhookUrl: true,
+          discordInviteUrl: true,
+          likeCount: true,
+          tags: { select: { name: true } },
+          createdAt: true,
+          updatedAt: true,
+          badges: true,
         },
       });
 
-      const response = formatGroupResponse(updatedGroup);
+      const owner = await prisma.participant.findFirst({
+        where: {
+          nickname: updatedGroup.ownerNickname,
+          groupId: updatedGroup.id,
+        },
+        select: { id: true, nickname: true, createdAt: true, updatedAt: true },
+      });
 
-      res.json({ message: response });
+      const participants = await prisma.participant.findMany({
+        where: { groupId: parseInt(groupId, 10) },
+        select: { id: true, nickname: true, createdAt: true, updatedAt: true },
+      });
+
+      res.json({ ...groups, owner, participants });
     })
   )
   .delete(
@@ -326,7 +352,6 @@ router
       res.json({ message: deletedGrop });
     })
   );
-
 router
   .route("/:id/participants")
   .post(
@@ -354,23 +379,41 @@ router
 
       const group = await prisma.group.findUniqueOrThrow({
         where: { id: parseInt(groupId, 10) },
-        include: {
-          participants: {
-            select: {
-              id: true,
-              nickname: true,
-              createdAt: true,
-              updatedAt: true,
-            },
-          },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          photoUrl: true,
+          goalRep: true,
+          discordWebhookUrl: true,
+          discordInviteUrl: true,
+          likeCount: true,
+          tags: { select: { name: true } },
+          createdAt: true,
+          updatedAt: true,
+          badges: true,
         },
       });
 
-      console.log("참가자 목록:", group.participants);
+      const ownerNickname = await prisma.group.findUnique({
+        where: { id: parseInt(groupId, 10) },
+        select: { ownerNickname: true },
+      });
 
-      const response = formatGroupResponse(group);
+      const owner = await prisma.participant.findFirst({
+        where: {
+          nickname: ownerNickname.ownerNickname,
+          groupId: parseInt(groupId, 10),
+        },
+        select: { id: true, nickname: true, createdAt: true, updatedAt: true },
+      });
 
-      res.json({ message: response });
+      const participants = await prisma.participant.findMany({
+        where: { groupId: parseInt(groupId, 10) },
+        select: { id: true, nickname: true, createdAt: true, updatedAt: true },
+      });
+
+      res.json({ ...group, owner, participants });
     })
   )
   .delete(

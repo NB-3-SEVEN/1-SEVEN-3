@@ -296,7 +296,9 @@ router
         search = "",
       } = req.query;
 
-      const offset = (page - 1) * limit;
+      const pageNum = Number(page);
+      const limitNum = Number(limit);
+      const offset = (pageNum - 1) * limitNum;
 
       let orderByField;
       switch (orderBy) {
@@ -326,7 +328,7 @@ router
         where,
         orderBy: orderByField,
         skip: offset,
-        take: limit,
+        take: limitNum,
         select: {
           id: true,
           exerciseType: true,

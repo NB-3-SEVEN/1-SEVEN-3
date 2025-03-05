@@ -1,15 +1,226 @@
 import express from "express";
-import { getGroup, getGroups, getRank, postGroup } from "../api/group.js";
-import { PrismaClient, Prisma } from "@prisma/client";
-import { CreateParticipant, CreateRecord } from "../struct.js";
+import { PrismaClient } from "@prisma/client";
+import { CreateGroup, CreateParticipant, CreateRecord } from "../struct.js";
 import { assert } from "superstruct";
 import { asyncHandler } from "../asyncHandler.js";
+import { formatGroupResponse } from "../formatter.js";
 
 const prisma = new PrismaClient();
 const router = express.Router();
-router.route("/").get(asyncHandler(getGroups)).post(asyncHandler(postGroup));
-router.route("/:groupId").get(asyncHandler(getGroup));
-router.route("/:groupId/rank/").get(asyncHandler(getRank));
+router
+  .route("/")
+  .get(
+    asyncHandler(async (req, res) => {
+      const {
+        page = 1,
+        limit = 10,
+        order = "desc",
+        orderBy = "createdAt",
+        search = "",
+      } = req.query;
+
+      let orderByParameter;
+      switch (orderBy) {
+        case "createdAt":
+          orderByParameter = {
+            createdAt: order,
+          };
+          break;
+        case "likeCount":
+          orderByParameter = {
+            likeCount: order,
+          };
+          break;
+        case "participantCount":
+          orderByParameter = {
+            participants: {
+              _count: order,
+            },
+          };
+          break;
+      }
+
+      const groups = await prisma.group.findMany({
+        skip: Number((page - 1) * 6),
+        take: Number(limit),
+        orderBy: orderByParameter,
+        where: {
+          name: {
+            contains: search,
+          },
+        },
+        include: {
+          tags: true,
+          participants: true,
+        },
+      });
+
+      const data = groups.map((group) => {
+        return formatGroupResponse(group);
+      });
+
+      const json = {
+        data,
+        total: data.length,
+      };
+
+      res.status(200).json(json);
+    })
+  )
+  .post(
+    asyncHandler(async (req, res) => {
+      assert(req.body, CreateGroup);
+      await prisma.$transaction(async (prisma) => {
+        const body = req.body;
+        const group = await prisma.group.create({
+          data: {
+            name: body.name,
+            description: body.description,
+            photoUrl: body.photoUrl,
+            goalRep: body.goalRep,
+            discordWebhookUrl: body.discordWebhookUrl,
+            discordInviteUrl: body.discordInviteUrl,
+            ownerNickname: body.ownerNickname,
+            ownerPassword: body.ownerPassword,
+          },
+        });
+
+        await prisma.participant.create({
+          data: {
+            nickname: body.ownerNickname,
+            password: body.ownerPassword,
+            groupId: group.id,
+          },
+        });
+
+        const tags = [...new Set(req.body.tags)];
+
+        const tagsName = tags.map((tag) => {
+          return {
+            name: tag,
+            groupId: group.id,
+          };
+        });
+
+        await prisma.tag.createMany({
+          data: tagsName,
+        });
+        const json = formatGroupResponse(group);
+
+        res.status(201).json(json);
+      });
+    })
+  );
+router.route("/:groupId").get(
+  asyncHandler(async (req, res) => {
+    const { groupId } = req.params;
+    const group = await prisma.group.findUnique({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        photoUrl: true,
+        goalRep: true,
+        discordWebhookUrl: true,
+        discordInviteUrl: true,
+        likeCount: true,
+        tags: true,
+        createdAt: true,
+        updatedAt: true,
+        badges: true,
+      },
+      where: {
+        id: Number(groupId),
+      },
+    });
+
+    const { ownerNickname } = await prisma.group.findUnique({
+      where: {
+        id: Number(groupId),
+      },
+      select: {
+        ownerNickname: true,
+      },
+    });
+
+    const owner = await prisma.participant.findUnique({
+      where: {
+        id: Number(groupId),
+        nickname: ownerNickname,
+      },
+      select: {
+        id: true,
+        nickname: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    const participants = await prisma.participant.findMany({
+      where: {
+        groupId: Number(groupId),
+      },
+      select: {
+        id: true,
+        nickname: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    const json = {
+      ...group,
+      owner,
+      participants,
+    };
+
+    res.status(200).json(json);
+  })
+);
+router.route("/:groupId/rank/").get(
+  asyncHandler(async (req, res) => {
+    const { groupId } = req.params;
+    const { duration = "monthly" } = req.query;
+    const participants = await prisma.participant.findMany({
+      where: {
+        groupId: Number(groupId),
+      },
+      select: {
+        id: true,
+        nickname: true,
+        records: true,
+      },
+    });
+
+    const rank = participants.map((participant) => {
+      let recordSum = 0;
+      let outdatedRecordCount = 0;
+      participant.records.forEach((record) => {
+        const date = new Date(record.createdAt);
+        const dateNow = new Date();
+        if (duration === "weekly") {
+          if (dateNow.getTime() - date.getTime() <= 7 * 24 * 60 * 60 * 1000) {
+            recordSum += Number(record.time);
+          } else outdatedRecordCount++;
+        } else {
+          if (dateNow.getTime() - date.getTime() <= 30 * 24 * 60 * 60 * 1000) {
+            recordSum += Number(record.time);
+          } else outdatedRecordCount++;
+        }
+      });
+      return {
+        participantId: participant.id,
+        nickname: participant.nickname,
+        recordCount: participant.records.length - outdatedRecordCount,
+        recordTime: recordSum,
+      };
+    });
+
+    const json = rank.sort((a, b) => b.recordCount - a.recordCount);
+
+    res.status(200).json(json);
+  })
+);
 
 // 운동 기록 등록
 router
@@ -175,7 +386,6 @@ router.route("/:groupId/records/:recordId").get(
 );
 
 // 그룹 추천(좋아요)
-
 
 router
   .post(

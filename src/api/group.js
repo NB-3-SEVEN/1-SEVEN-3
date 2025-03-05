@@ -91,12 +91,12 @@ export async function getGroups(req, res) {
       break;
     case "likeCount":
       orderByParameter = {
-        createdAt: order,
+        likeCount: order,
       };
       break;
     case "participantCount":
       orderByParameter = {
-        createdAt: order,
+        participantCount: order,
       };
       break;
   }

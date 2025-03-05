@@ -1,9 +1,9 @@
 import express from "express";
-import { getGroup, getGroups, getRank, postGroup } from "../api/group.js";
-import { PrismaClient, Prisma } from "@prisma/client";
-import { CreateParticipant, CreateRecord } from "../struct.js";
+import { PrismaClient } from "@prisma/client";
+import { CreateGroup, CreateParticipant, CreateRecord } from "../struct.js";
 import { assert } from "superstruct";
 import { asyncHandler } from "../asyncHandler.js";
+import { formatGroupResponse } from "../formatter.js";
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -56,47 +56,11 @@ router
       });
 
       const data = groups.map((group) => {
-        const owner = group.participants.find(
-          (p) => p.nickname === group.ownerNickname
-        );
-
-        const tags = group.tags.map((tag) => {
-          if (tag.groupId === group.id) {
-            return tag.name;
-          }
-        });
-        return {
-          id: group.id,
-          name: group.name,
-          description: group.description,
-          photoUrl: group.photoUrl,
-          goalRep: group.goalRep,
-          discordWebhookUrl: group.discordWebhookUrl,
-          discordInviteUrl: group.discordInviteUrl,
-          likeCount: group.likeCount,
-          tags: tags,
-          owner: {
-            id: owner.id,
-            nickname: owner.nickname,
-            createdAt: owner.createdAt,
-            updatedAt: owner.updatedAt,
-          },
-          participants: group.participants.map((participant) => {
-            return {
-              id: participant.id,
-              nickname: participant.nickname,
-              createdAt: participant.createdAt,
-              updatedAt: participant.updatedAt,
-            };
-          }),
-          createdAt: group.createdAt,
-          updatedAt: group.updatedAt,
-          badges: group.badges,
-        };
+        return formatGroupResponse(group);
       });
 
       const json = {
-        data: data,
+        data,
         total: data.length,
       };
 
@@ -121,7 +85,7 @@ router
           },
         });
 
-        const participant = await prisma.participant.create({
+        await prisma.participant.create({
           data: {
             nickname: body.ownerNickname,
             password: body.ownerPassword,
@@ -141,35 +105,7 @@ router
         await prisma.tag.createMany({
           data: tagsName,
         });
-        const json = {
-          //tags와 group 과 particpants 합쳐서 응답하기
-          id: group.id,
-          name: group.name,
-          description: group.description,
-          photoUrl: group.photoUrl,
-          goalRep: group.goalRep,
-          discordWebhookUrl: group.discordWebhookUrl,
-          discordInviteUrl: group.discordInviteUrl,
-          likeCount: group.likeCount,
-          tags: tags,
-          owner: {
-            id: participant.id,
-            nickname: participant.nickname,
-            createdAt: participant.createdAt,
-            updatedAt: participant.updatedAt,
-          },
-          participants: [
-            {
-              id: participant.id,
-              nickname: participant.nickname,
-              createdAt: participant.createdAt,
-              updatedAt: participant.updatedAt,
-            },
-          ],
-          createdAt: group.createdAt,
-          updatedAt: group.updatedAt,
-          badges: group.badges,
-        };
+        const json = formatGroupResponse(group);
 
         res.status(201).json(json);
       });

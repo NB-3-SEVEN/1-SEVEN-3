@@ -20,7 +20,7 @@ model Participant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   groupId   Int
-  records   Record[]
+  records   Record?
   group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
 }
 
@@ -32,7 +32,8 @@ model Group {
   goalRep           Int
   discordWebhookUrl String?
   discordInviteUrl  String?
-  likeCount         Int           @default(0)
+  likeCount         Int
+  tags              String[]
   ownerNickname     String
   ownerPassword     String
   badges            BadgeType[]
@@ -40,8 +41,6 @@ model Group {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   participants      Participant[]
-  Record            Record[]
-  tags              Tag[]         @relation("GroupTags")
 }
 
 model Record {
@@ -51,21 +50,10 @@ model Record {
   time         Int
   distance     Int
   photos       String[]
-  authorId     Int
+  authorId     Int          @unique
   author       Participant  @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  groupId      Int
-  group        Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
-}
-
-model Tag {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  groupId   Int?
-  group     Group?   @relation("GroupTags", fields: [groupId], references: [id], onDelete: Cascade)
 }
 
 enum BadgeType {

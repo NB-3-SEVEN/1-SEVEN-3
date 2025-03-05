@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { PARTICIPANTS, GROUPS, RECORDS, TAGS } from "./mock.js";
+import { PARTICIPANTS, GROUPS, RECORDS } from "./mock.js";
 
 const prisma = new PrismaClient();
 
@@ -8,43 +8,19 @@ async function main() {
   await prisma.record.deleteMany();
   await prisma.participant.deleteMany();
   await prisma.group.deleteMany();
-  await prisma.tag.deleteMany();
 
-  await prisma.tag.createMany({
-    data: TAGS,
-    skipDuplicates: true,
-  });
-
+  // 목 데이터 삽입
   await prisma.group.createMany({
-    data: GROUPS.map((group) => ({
-      ...group,
-      tags: undefined,
-    })),
+    data: GROUPS,
     skipDuplicates: true,
   });
 
-  await Promise.all(
-    GROUPS.map(async (group) => {
-      const tagIds = group.tags?.connect.map((tag) => tag.id) || [];
-      await prisma.group.update({
-        where: { id: group.id },
-        data: {
-          tags: {
-            connect: tagIds.map((id) => ({ id })),
-          },
-        },
-      });
-    })
-  );
-
-  // 참가자 데이터 삽입
   await Promise.all(
     PARTICIPANTS.map(async (participant) => {
       await prisma.participant.create({ data: participant });
     })
   );
 
-  // 레코드 데이터 삽입
   await prisma.record.createMany({
     data: RECORDS,
     skipDuplicates: true,

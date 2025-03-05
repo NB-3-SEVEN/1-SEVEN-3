@@ -96,7 +96,9 @@ export async function getGroups(req, res) {
       break;
     case "participantCount":
       orderByParameter = {
-        participantCount: order,
+        participants: {
+          _count: order,
+        },
       };
       break;
   }

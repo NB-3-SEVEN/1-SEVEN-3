@@ -175,87 +175,43 @@ router.route("/:groupId/records/:recordId").get(
 );
 
 // 그룹 추천(좋아요)
-router
-  .post("/:groupId/likes", async (req, res) => {
-    const { groupId } = req.params;
-    const group = await prisma.group.findUnique({
-      where: {
-        id: parseInt(groupId),
-      },
-      select: { likeCount: true, badges: true },
-    });
 
-    if (!group) {
-      return res.status(404).json({ message: "Group not found" });
-    }
-
-    // likeCount 증가
-    let updatedData = {
-      likeCount: (group.likeCount || 0) + 1,
-    };
-
-    if (updatedData.likeCount >= 100 && group.badges !== "LIKE_100") {
-      updatedData.badges = "LIKE_100"; //
-    }
-
-    const updatedGroup = await prisma.group.update({
-      where: { id: parseInt(groupId) },
-      data: updatedData,
-    });
-
-    res.status(200).json(updatedGroup);
-  })
-  .delete("/:groupId/likes", async (req, res) => {
-    const { groupId } = req.params;
-    const group = await prisma.group.findUnique({
-      where: {
-        id: parseInt(groupId),
-      },
-    });
-
-    if (!group) {
-      return res.status(404).json({ error: "Group not found" });
-    }
-    if (group.likeCount <= 0) {
-      return res
-        .status(422)
-        .json({ message: "좋아요 수는 최소 0 이상이어야 합니다." });
-    }
-
-    const updateGroup = await prisma.group.update({
-      where: {
-        id: parseInt(groupId),
-      },
-      data: {
-        likeCount: Math.max(0, group.likeCount - 1), // 기본값을 0으로 설정
-      },
-    });
-
-    res.status(200).json(updateGroup);
-  });
 
 router
-  .route("/:groupId/likes")
   .post(
+    "/:groupId/likes",
     asyncHandler(async (req, res) => {
       const { groupId } = req.params;
       const group = await prisma.group.findUnique({
         where: {
           id: parseInt(groupId),
         },
+        select: { likeCount: true, badges: true },
       });
-      const updateGroup = await prisma.group.update({
-        where: {
-          id: parseInt(groupId),
-        },
-        data: {
-          likeCount: group.likeCount + 1,
-        },
+
+      if (!group) {
+        return res.status(404).json({ error: "Group not found" });
+      }
+
+      // likeCount 증가
+      let updatedData = {
+        likeCount: (group.likeCount || 0) + 1,
+      };
+
+      if (updatedData.likeCount >= 100 && !group.badges.includes("LIKE_100")) {
+        updatedData.badges = [...group.badges, "LIKE_100"];
+      }
+
+      const updatedGroup = await prisma.group.update({
+        where: { id: parseInt(groupId) },
+        data: updatedData,
       });
-      res.status(200).json(updateGroup);
+
+      res.status(200).json(updatedGroup);
     })
   )
   .delete(
+    "/:groupId/likes",
     asyncHandler(async (req, res) => {
       const { groupId } = req.params;
       const group = await prisma.group.findUnique({
@@ -263,12 +219,20 @@ router
           id: parseInt(groupId),
         },
       });
+      if (!group) {
+        return res.status(404).json({ error: "Group not found" });
+      }
+      if (group.likeCount <= 0) {
+        return res
+          .status(422)
+          .json({ message: "좋아요 수는 최소 0 이상이어야 합니다." });
+      }
       const updateGroup = await prisma.group.update({
         where: {
           id: parseInt(groupId),
         },
         data: {
-          likeCount: group.likeCount - 1,
+          likeCount: Math.max(0, group.likeCount - 1), // 기본값을 0으로 설정
         },
       });
       res.status(200).json(updateGroup);

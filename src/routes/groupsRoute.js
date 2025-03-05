@@ -217,7 +217,6 @@ router
           id: parseInt(groupId),
         },
       });
-
       if (!group) {
         return res.status(404).json({ error: "Group not found" });
       }
@@ -226,7 +225,6 @@ router
           .status(422)
           .json({ message: "좋아요 수는 최소 0 이상이어야 합니다." });
       }
-
       const updateGroup = await prisma.group.update({
         where: {
           id: parseInt(groupId),
@@ -235,7 +233,6 @@ router
           likeCount: Math.max(0, group.likeCount - 1), // 기본값을 0으로 설정
         },
       });
-
       res.status(200).json(updateGroup);
     })
   );

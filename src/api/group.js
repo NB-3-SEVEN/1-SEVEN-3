@@ -29,7 +29,9 @@ export async function postGroup(req, res) {
       },
     });
 
-    const tagsName = body.tags.map((tag) => {
+    const tags = [...new Set(req.body.tags)];
+
+    const tagsName = tags.map((tag) => {
       return {
         name: tag,
         groupId: group.id,
@@ -49,7 +51,7 @@ export async function postGroup(req, res) {
       discordWebhookUrl: group.discordWebhookUrl,
       discordInviteUrl: group.discordInviteUrl,
       likeCount: group.likeCount,
-      tags: body.tags,
+      tags: tags,
       owner: {
         id: participant.id,
         nickname: participant.nickname,

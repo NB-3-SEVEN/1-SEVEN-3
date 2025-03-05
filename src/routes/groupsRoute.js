@@ -186,7 +186,7 @@ router
     });
 
     if (!group) {
-      return res.status(404).json({ error: "Group not found" });
+      return res.status(404).json({ message: "Group not found" });
     }
 
     // likeCount 증가
@@ -341,8 +341,12 @@ router
         where: { id: parseInt(id, 10) },
       });
 
-      if (group.ownerPassword !== ownerPassword) {
-        return res.status(401).json({ error: "Wrong password" });
+      if (!group) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+
+      if (group.ownerPassword.trim() !== ownerPassword.trim()) {
+        return res.status(401).json({ message: "Wrong password" });
       }
 
       const deletedGrop = await prisma.group.delete({
@@ -418,23 +422,27 @@ router
   )
   .delete(
     asyncHandler(async (req, res) => {
-      const { id } = req.params;
+      const { id: groupId } = req.params;
       const { nickname, password } = req.body;
 
-      const participant = await prisma.participant.findUniqueOrThrow({
-        where: { id: parseInt(id, 10) },
+      const participant = await prisma.participant.findFirst({
+        where: { groupId: parseInt(groupId, 10), nickname: nickname?.trim() },
       });
 
-      if (participant.nickname !== nickname) {
-        return res.status(400).json({ error: "nickname is required" });
+      if (!participant) {
+        return res.status(400).json({ message: "nickname is required" });
       }
 
-      if (participant.password !== password) {
-        return res.status(401).json({ error: "Wrong password" });
+      if (participant.nickname.trim() !== nickname.trim()) {
+        return res.status(400).json({ message: "nickname is required" });
+      }
+
+      if (participant.password.trim() !== password.trim()) {
+        return res.status(401).json({ message: "Wrong password" });
       }
 
       const deletedParticipant = await prisma.participant.delete({
-        where: { id: parseInt(id, 10) },
+        where: { id: participant.id },
       });
 
       res.json({ message: deletedParticipant });

@@ -104,7 +104,7 @@ export async function getGroups(req, res) {
   }
 
   const groups = await prisma.group.findMany({
-    skip: (page - 1) * 6,
+    skip: Number((page - 1) * 6),
     take: Number(limit),
     orderBy: orderByParameter,
     where: {

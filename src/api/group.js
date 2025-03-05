@@ -56,7 +56,7 @@ export async function postGroup(req, res) {
         createdAt: participant.createdAt,
         updatedAt: participant.updatedAt,
       },
-      participant: [
+      participants: [
         {
           id: participant.id,
           nickname: participant.nickname,
@@ -142,7 +142,7 @@ export async function getGroups(req, res) {
         createdAt: owner.createdAt,
         updatedAt: owner.updatedAt,
       },
-      participant: group.participants.map((participant) => {
+      participants: group.participants.map((participant) => {
         return {
           id: participant.id,
           nickname: participant.nickname,
@@ -208,7 +208,7 @@ export async function getGroup(req, res) {
     },
   });
 
-  const participant = await prisma.participant.findMany({
+  const participants = await prisma.participant.findMany({
     where: {
       groupId: Number(groupId),
     },
@@ -223,7 +223,7 @@ export async function getGroup(req, res) {
   const json = {
     ...group,
     owner,
-    participant,
+    participants,
   };
 
   res.status(200).json(json);

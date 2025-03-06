@@ -85,17 +85,19 @@ router
           },
         });
 
-        await prisma.participant.create({
-          data: {
-            nickname: body.ownerNickname,
-            password: body.ownerPassword,
-            groupId: group.id,
-          },
-        });
+        group.participants = [
+          await prisma.participant.create({
+            data: {
+              nickname: body.ownerNickname,
+              password: body.ownerPassword,
+              groupId: group.id,
+            },
+          }),
+        ];
 
         const tags = [...new Set(req.body.tags)];
 
-        const tagsName = tags.map((tag) => {
+        group.tags = tags.map((tag) => {
           return {
             name: tag,
             groupId: group.id,
@@ -103,8 +105,9 @@ router
         });
 
         await prisma.tag.createMany({
-          data: tagsName,
+          data: group.tags,
         });
+
         const json = formatGroupResponse(group);
 
         res.status(201).json(json);
@@ -115,66 +118,16 @@ router.route("/:groupId").get(
   asyncHandler(async (req, res) => {
     const { groupId } = req.params;
     const group = await prisma.group.findUnique({
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        photoUrl: true,
-        goalRep: true,
-        discordWebhookUrl: true,
-        discordInviteUrl: true,
-        likeCount: true,
+      where: {
+        id: Number(groupId),
+      },
+      include: {
         tags: true,
-        createdAt: true,
-        updatedAt: true,
-        badges: true,
-      },
-      where: {
-        id: Number(groupId),
+        participants: true,
       },
     });
 
-    const { ownerNickname } = await prisma.group.findUnique({
-      where: {
-        id: Number(groupId),
-      },
-      select: {
-        ownerNickname: true,
-      },
-    });
-
-    const owner = await prisma.participant.findUnique({
-      where: {
-        id: Number(groupId),
-        nickname: ownerNickname,
-      },
-      select: {
-        id: true,
-        nickname: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    const participants = await prisma.participant.findMany({
-      where: {
-        groupId: Number(groupId),
-      },
-      select: {
-        id: true,
-        nickname: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    const json = {
-      ...group,
-      owner,
-      participants,
-    };
-
-    res.status(200).json(json);
+    res.status(200).json(formatGroupResponse(group));
   })
 );
 router.route("/:groupId/rank/").get(

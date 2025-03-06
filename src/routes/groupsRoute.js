@@ -62,7 +62,7 @@ router
 
       const json = {
         data,
-        total: data.length,
+        total: await prisma.group.count(),
       };
 
       res.status(200).json(json);

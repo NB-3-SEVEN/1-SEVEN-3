@@ -462,50 +462,24 @@ router
       });
 
       if (group.ownerPassword !== ownerPassword) {
-        res.status(401).json({ message: "Wrong password" });
+        return res.status(401).json({ message: "Wrong password" });
       }
 
       if (goalRep && !Number.isInteger(goalRep)) {
         return res.status(400).json({ message: "goalRep must be an integer" });
       }
 
-      const updatedGroup = await prisma.group.update({
+      await prisma.group.update({
         where: { id: parseInt(groupId, 10) },
         data: { ...updateData, goalRep },
       });
 
-      const groups = await prisma.group.findUniqueOrThrow({
+      const updatedGroup = await prisma.group.findFirstOrThrow({
         where: { id: parseInt(groupId, 10) },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          photoUrl: true,
-          goalRep: true,
-          discordWebhookUrl: true,
-          discordInviteUrl: true,
-          likeCount: true,
-          tags: { select: { name: true } },
-          createdAt: true,
-          updatedAt: true,
-          badges: true,
-        },
+        include: { participants: true, tags: true },
       });
 
-      const owner = await prisma.participant.findFirst({
-        where: {
-          nickname: updatedGroup.ownerNickname,
-          groupId: updatedGroup.id,
-        },
-        select: { id: true, nickname: true, createdAt: true, updatedAt: true },
-      });
-
-      const participants = await prisma.participant.findMany({
-        where: { groupId: parseInt(groupId, 10) },
-        select: { id: true, nickname: true, createdAt: true, updatedAt: true },
-      });
-
-      res.json({ ...groups, owner, participants });
+      res.json(formatGroupResponse(updatedGroup));
     })
   )
   .delete(
@@ -559,41 +533,10 @@ router
 
       const group = await prisma.group.findUniqueOrThrow({
         where: { id: parseInt(groupId, 10) },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          photoUrl: true,
-          goalRep: true,
-          discordWebhookUrl: true,
-          discordInviteUrl: true,
-          likeCount: true,
-          tags: { select: { name: true } },
-          createdAt: true,
-          updatedAt: true,
-          badges: true,
-        },
+        include: { tags: true, participants: true },
       });
 
-      const ownerNickname = await prisma.group.findUnique({
-        where: { id: parseInt(groupId, 10) },
-        select: { ownerNickname: true },
-      });
-
-      const owner = await prisma.participant.findFirst({
-        where: {
-          nickname: ownerNickname.ownerNickname,
-          groupId: parseInt(groupId, 10),
-        },
-        select: { id: true, nickname: true, createdAt: true, updatedAt: true },
-      });
-
-      const participants = await prisma.participant.findMany({
-        where: { groupId: parseInt(groupId, 10) },
-        select: { id: true, nickname: true, createdAt: true, updatedAt: true },
-      });
-
-      res.json({ ...group, owner, participants });
+      res.json(formatGroupResponse(group));
     })
   )
   .delete(

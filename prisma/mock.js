@@ -1,3 +1,5 @@
+import { ExerciseType } from "@prisma/client";
+
 export const PARTICIPANTS = [
   {
     id: 1000001,
@@ -103,7 +105,7 @@ export const GROUPS = [
       connect: [{ id: 1000001 }, { id: 1000002 }],
     },
     ownerNickname: "홍길동",
-    ownerPassword: "ownerpass123",
+    ownerPassword: "password123",
     recordCount: 5,
     createdAt: "2023-07-16T08:00:00Z",
     updatedAt: "2023-07-16T08:00:00Z",
@@ -121,7 +123,7 @@ export const GROUPS = [
       connect: [{ id: 1000003 }],
     },
     ownerNickname: "김영희",
-    ownerPassword: "ownerpass456",
+    ownerPassword: "password456",
     recordCount: 3,
     createdAt: "2023-07-16T08:30:00Z",
     updatedAt: "2023-07-16T08:30:00Z",
@@ -131,7 +133,7 @@ export const GROUPS = [
 export const RECORDS = [
   {
     id: 1000001,
-    exerciseType: "RUN",
+    exerciseType: ExerciseType.RUN,
     description: "아침 조깅",
     time: 30,
     distance: 5,
@@ -143,7 +145,7 @@ export const RECORDS = [
   },
   {
     id: 1000002,
-    exerciseType: "BIKE",
+    exerciseType: ExerciseType.BIKE,
     description: "자전거 라이딩",
     time: 60,
     distance: 20,
@@ -155,7 +157,7 @@ export const RECORDS = [
   },
   {
     id: 1000003,
-    exerciseType: "BIKE",
+    exerciseType: ExerciseType.BIKE,
     description: "자전거 라이딩",
     time: 40,
     distance: 18,
@@ -167,7 +169,7 @@ export const RECORDS = [
   },
   {
     id: 1000004,
-    exerciseType: "BIKE",
+    exerciseType: ExerciseType.BIKE,
     description: "자전거 라이딩",
     time: 50,
     distance: 20,
@@ -179,7 +181,7 @@ export const RECORDS = [
   },
   {
     id: 1000005,
-    exerciseType: "BIKE",
+    exerciseType: ExerciseType.BIKE,
     description: "자전거 라이딩",
     time: 10,
     distance: 5,
@@ -191,7 +193,7 @@ export const RECORDS = [
   },
   {
     id: 1000006,
-    exerciseType: "BIKE",
+    exerciseType: ExerciseType.BIKE,
     description: "자전거 라이딩",
     time: 50,
     distance: 2,
@@ -203,7 +205,7 @@ export const RECORDS = [
   },
   {
     id: 1000007,
-    exerciseType: "BIKE",
+    exerciseType: ExerciseType.BIKE,
     description: "자전거 라이딩",
     time: 30,
     distance: 50,

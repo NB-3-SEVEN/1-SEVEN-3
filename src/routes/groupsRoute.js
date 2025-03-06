@@ -456,6 +456,7 @@ router
         where: { id: parseInt(id, 10) },
       });
 
+      console.log(group);
       if (!group) {
         return res.status(404).json({ message: "Group not found" });
       }

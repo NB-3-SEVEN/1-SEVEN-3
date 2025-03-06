@@ -282,7 +282,7 @@ router
         },
       });
 
-      await autoBadge(groupId, prisma);
+      await autoBadge(groupId);
 
       res.status(201).send(record);
     })
@@ -400,7 +400,6 @@ router
 
       console.log("groupId:", groupId);
 
-      // groupId가 숫자 형태가 아니면 400 에러 반환
       const groupIdInt = parseInt(groupId, 10);
       if (isNaN(groupIdInt)) {
         return res.status(400).json({ error: "Invalid groupId" });
@@ -408,7 +407,7 @@ router
 
       const group = await prisma.group.findUnique({
         where: {
-          id: groupIdInt, // 변환된 groupIdInt 사용
+          id: groupIdInt,
         },
         select: { likeCount: true, badges: true },
       });
@@ -417,7 +416,6 @@ router
         return res.status(404).json({ error: "Group not found" });
       }
 
-      // likeCount 증가
       let updatedData = {
         likeCount: (group.likeCount || 0) + 1,
       };
@@ -426,7 +424,7 @@ router
       //   updatedData.badges = [...group.badges, "LIKE_100"];
       // }
 
-      await autoBadge(groupIdInt, prisma);
+      await autoBadge(groupIdInt);
 
       const updatedGroup = await prisma.group.update({
         where: { id: parseInt(groupId) },
@@ -571,7 +569,7 @@ router
         },
       });
 
-      await autoBadge(groupId, prisma);
+      await autoBadge(groupId);
 
       const group = await prisma.group.findUniqueOrThrow({
         where: { id: parseInt(groupId, 10) },

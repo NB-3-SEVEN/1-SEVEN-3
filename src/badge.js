@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 const router = express.Router();
 const prisma = new PrismaClient();
 
-export const autoBadge = async (groupId, prisma) => {
+export const autoBadge = async (groupId) => {
   const groupIdInt = parseInt(groupId, 10);
   const group = await prisma.group.findUnique({
     where: { id: groupIdInt },
@@ -16,6 +16,10 @@ export const autoBadge = async (groupId, prisma) => {
   const { likeCount, participant, record } = group;
   const participantsCount = group.participants.length;
   const recordsCount = group.Record.length;
+
+  if (!group) {
+    return res.status(404).json({ message: "Group not found" });
+  }
 
   if (likeCount >= 100 && !group.badges.includes("LIKE_100")) {
     updatedBadge.push("LIKE_100");

@@ -4,6 +4,7 @@ import { CreateGroup, CreateParticipant, CreateRecord } from "../struct.js";
 import { assert } from "superstruct";
 import { asyncHandler } from "../asyncHandler.js";
 import { formatGroupResponse } from "../formatter.js";
+import { autoBadge } from "../badge.js";
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -281,6 +282,8 @@ router
         },
       });
 
+      await autoBadge(groupId);
+
       res.status(201).send(record);
     })
   )
@@ -394,9 +397,17 @@ router
     "/:groupId/likes",
     asyncHandler(async (req, res) => {
       const { groupId } = req.params;
+
+      console.log("groupId:", groupId);
+
+      const groupIdInt = parseInt(groupId, 10);
+      if (isNaN(groupIdInt)) {
+        return res.status(400).json({ error: "Invalid groupId" });
+      }
+
       const group = await prisma.group.findUnique({
         where: {
-          id: parseInt(groupId),
+          id: groupIdInt,
         },
         select: { likeCount: true, badges: true },
       });
@@ -405,14 +416,15 @@ router
         return res.status(404).json({ error: "Group not found" });
       }
 
-      // likeCount 증가
       let updatedData = {
         likeCount: (group.likeCount || 0) + 1,
       };
 
-      if (updatedData.likeCount >= 100 && !group.badges.includes("LIKE_100")) {
-        updatedData.badges = [...group.badges, "LIKE_100"];
-      }
+      // if (updatedData.likeCount >= 100 && !group.badges.includes("LIKE_100")) {
+      //   updatedData.badges = [...group.badges, "LIKE_100"];
+      // }
+
+      await autoBadge(groupIdInt);
 
       const updatedGroup = await prisma.group.update({
         where: { id: parseInt(groupId) },
@@ -530,6 +542,8 @@ router
           group: { connect: { id: parseInt(groupId, 10) } },
         },
       });
+
+      await autoBadge(groupId);
 
       const group = await prisma.group.findUniqueOrThrow({
         where: { id: parseInt(groupId, 10) },

@@ -556,6 +556,16 @@ router
         return res.status(400).json({ message: "nickname is required" });
       }
 
+      const group = await prisma.group.findUnique({
+        where: { id: parseInt(groupId, 10) },
+      });
+
+      if (group.ownerNickname === participant.nickname) {
+        return res
+          .status(403)
+          .json({ message: "Owner cannot leave the group" });
+      }
+
       if (participant.password.trim() !== password.trim()) {
         return res.status(401).json({ message: "Wrong password" });
       }

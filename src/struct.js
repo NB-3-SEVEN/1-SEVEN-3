@@ -17,8 +17,15 @@ export const CreateGroup = s.object({
   ownerPassword: s.size(s.string(), 8, 20),
 });
 
+const exerciseTypeEnum = ["RUN", "BIKE", "SWIM"];
+const toUpperCaseExerciseType = (value) =>
+  exerciseTypeEnum.includes(value.toUpperCase()) ? value.toUpperCase() : null;
+const ExerciseTypeStruct = s.define("ExerciseType", (value) => {
+  return typeof value === "string" && toUpperCaseExerciseType(value) !== null;
+});
+
 export const CreateRecord = s.object({
-  exerciseType: s.enums(["RUN", "BIKE", "SWIM"]),
+  exerciseType: ExerciseTypeStruct,
   description: s.optional(s.string()),
   time: s.min(s.integer(), 1),
   distance: s.min(s.integer(), 0),

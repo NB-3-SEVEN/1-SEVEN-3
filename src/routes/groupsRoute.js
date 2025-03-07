@@ -1,3 +1,4 @@
+
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { CreateGroup, CreateParticipant, CreateRecord } from "../struct.js";
@@ -534,3 +535,4 @@ router
   );
 
 export default router;
+

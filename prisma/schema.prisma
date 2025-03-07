@@ -42,6 +42,7 @@ model Group {
   participants      Participant[]
   Record            Record[]
   tags              Tag[]         @relation("GroupTags")
+  TagGroup          TagGroup[]
 }
 
 model Record {
@@ -60,12 +61,22 @@ model Record {
 }
 
 model Tag {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   groupId   Int?
-  group     Group?   @relation("GroupTags", fields: [groupId], references: [id], onDelete: Cascade)
+  group     Group?     @relation("GroupTags", fields: [groupId], references: [id], onDelete: Cascade)
+  TagGroup  TagGroup[]
+}
+
+model TagGroup {
+  tagId   Int
+  groupId Int
+  tag     Tag   @relation(fields: [tagId], references: [id])
+  group   Group @relation(fields: [groupId], references: [id])
+
+  @@id([tagId, groupId])
 }
 
 enum BadgeType {

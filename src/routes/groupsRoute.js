@@ -351,8 +351,6 @@ router
     asyncHandler(async (req, res) => {
       const { groupId } = req.params;
 
-      console.log("groupId:", groupId);
-
       const groupIdInt = parseInt(groupId, 10);
       if (isNaN(groupIdInt)) {
         return res.status(400).json({ error: "Invalid groupId" });

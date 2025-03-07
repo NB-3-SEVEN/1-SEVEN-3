@@ -14,8 +14,7 @@ app.use(cors());
 const upload = multer({ dest: "./uploads" });
 app.use("/images", express.static("uploads"));
 
-app.post("/images", upload.single("attachment"), (req, res) => {
-  console.log(req.file);
+app.post("/images", upload.single("files"), (req, res) => {
   const urls = [`/images/${req.file.filename}`];
   res.json({ urls });
 });

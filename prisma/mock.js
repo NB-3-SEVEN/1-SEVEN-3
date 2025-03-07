@@ -1,5 +1,3 @@
-import { ExerciseType } from "@prisma/client";
-
 export const PARTICIPANTS = [
   {
     id: 1000001,
@@ -133,7 +131,7 @@ export const GROUPS = [
 export const RECORDS = [
   {
     id: 1000001,
-    exerciseType: ExerciseType.RUN,
+    exerciseType: "run",
     description: "아침 조깅",
     time: 30,
     distance: 5,
@@ -145,7 +143,7 @@ export const RECORDS = [
   },
   {
     id: 1000002,
-    exerciseType: ExerciseType.BIKE,
+    exerciseType: "bike",
     description: "자전거 라이딩",
     time: 60,
     distance: 20,
@@ -157,7 +155,7 @@ export const RECORDS = [
   },
   {
     id: 1000003,
-    exerciseType: ExerciseType.BIKE,
+    exerciseType: "bike",
     description: "자전거 라이딩",
     time: 40,
     distance: 18,
@@ -169,7 +167,7 @@ export const RECORDS = [
   },
   {
     id: 1000004,
-    exerciseType: ExerciseType.BIKE,
+    exerciseType: "bike",
     description: "자전거 라이딩",
     time: 50,
     distance: 20,
@@ -181,7 +179,7 @@ export const RECORDS = [
   },
   {
     id: 1000005,
-    exerciseType: ExerciseType.BIKE,
+    exerciseType: "bike",
     description: "자전거 라이딩",
     time: 10,
     distance: 5,
@@ -193,7 +191,7 @@ export const RECORDS = [
   },
   {
     id: 1000006,
-    exerciseType: ExerciseType.BIKE,
+    exerciseType: "bike",
     description: "자전거 라이딩",
     time: 50,
     distance: 2,
@@ -205,7 +203,7 @@ export const RECORDS = [
   },
   {
     id: 1000007,
-    exerciseType: ExerciseType.BIKE,
+    exerciseType: "bike",
     description: "자전거 라이딩",
     time: 30,
     distance: 50,

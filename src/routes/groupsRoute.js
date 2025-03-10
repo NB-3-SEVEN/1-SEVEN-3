@@ -1,4 +1,3 @@
-
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { CreateGroup, CreateParticipant, CreateRecord } from "../struct.js";
@@ -409,7 +408,7 @@ router
   .patch(
     asyncHandler(async (req, res) => {
       const { id: groupId } = req.params;
-      const { ownerPassword, goalRep, ...updateData } = req.body;
+      const { ownerPassword, goalRep, tags, ...updateData } = req.body;
       const group = await prisma.group.findFirstOrThrow({
         where: { id: parseInt(groupId, 10) },
       });
@@ -420,6 +419,46 @@ router
 
       if (goalRep && !Number.isInteger(goalRep)) {
         return res.status(400).json({ message: "goalRep must be an integer" });
+      }
+
+      if (tags) {
+        const newTags = tags.map((tag) => tag.replace("#", "").trim());
+
+        const existingTags = await prisma.tag.findMany({
+          where: { name: { in: newTags } },
+          select: { id: true, name: true },
+        });
+
+        const tagsToCreate = newTags.filter(
+          (tag) => !existingTags.some((t) => t.name === tag)
+        );
+
+        const createdTags = await prisma.$transaction(
+          tagsToCreate.map((tag) =>
+            prisma.tag.create({ data: { name: tag }, select: { id: true } })
+          )
+        );
+
+        const allTaglds = [...existingTags, ...createdTags].map((tag) => ({
+          id: tag.id,
+        }));
+
+        await prisma.group.update({
+          where: { id: parseInt(groupId, 10) },
+          data: {
+            ...updateData,
+            goalRep,
+            tags: { set: allTaglds },
+          },
+        });
+      } else {
+        await prisma.group.update({
+          where: { id: parseInt(groupId, 10) },
+          data: {
+            ...updateData,
+            goalRep,
+          },
+        });
       }
 
       await prisma.group.update({
@@ -535,4 +574,3 @@ router
   );
 
 export default router;
-

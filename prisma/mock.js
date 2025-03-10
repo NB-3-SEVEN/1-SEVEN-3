@@ -1,97 +1,5 @@
-export const PARTICIPANTS = [
-  {
-    id: 1000001,
-    nickname: "홍길동",
-    password: "password123",
-    createdAt: "2023-07-16T09:00:00Z",
-    updatedAt: "2023-07-16T09:00:00Z",
-    groupId: 1000001,
-  },
-  {
-    id: 1000002,
-    nickname: "김영희",
-    password: "password456",
-    createdAt: "2023-07-16T09:30:00Z",
-    updatedAt: "2023-07-16T09:30:00Z",
-    groupId: 1000002,
-  },
-  {
-    id: 1000003,
-    nickname: "철수",
-    password: "password789",
-    createdAt: "2023-07-16T10:00:00Z",
-    updatedAt: "2023-07-16T10:00:00Z",
-    groupId: 1000002,
-  },
-  {
-    id: 1000004,
-    nickname: "지훈",
-    password: "password133",
-    createdAt: "2023-07-16T10:30:00Z",
-    updatedAt: "2023-07-16T10:30:00Z",
-    groupId: 1000002,
-  },
-  {
-    id: 1000005,
-    nickname: "정우",
-    password: "password233",
-    createdAt: "2023-07-16T11:00:00Z",
-    updatedAt: "2023-07-16T11:00:00Z",
-    groupId: 1000002,
-  },
-  {
-    id: 1000006,
-    nickname: "채운",
-    password: "password333",
-    createdAt: "2023-07-16T11:30:00Z",
-    updatedAt: "2023-07-16T11:30:00Z",
-    groupId: 1000002,
-  },
-  {
-    id: 1000007,
-    nickname: "기범",
-    password: "password433",
-    createdAt: "2023-07-16T12:00:00Z",
-    updatedAt: "2023-07-16T12:00:00Z",
-    groupId: 1000002,
-  },
-  {
-    id: 1000008,
-    nickname: "지수",
-    password: "password533",
-    createdAt: "2023-07-16T12:30:00Z",
-    updatedAt: "2023-07-16T12:30:00Z",
-    groupId: 1000002,
-  },
-  {
-    id: 1000009,
-    nickname: "현우",
-    password: "password633",
-    createdAt: "2023-07-16T13:00:00Z",
-    updatedAt: "2023-07-16T13:00:00Z",
-    groupId: 1000002,
-  },
-  {
-    id: 1000010,
-    nickname: "강태",
-    password: "password733",
-    createdAt: "2023-07-16T13:30:00Z",
-    updatedAt: "2023-07-16T13:30:00Z",
-    groupId: 1000002,
-  },
-  {
-    id: 1000011,
-    nickname: "준수",
-    password: "password833",
-    createdAt: "2023-07-16T14:00:00Z",
-    updatedAt: "2023-07-16T14:00:00Z",
-    groupId: 1000002,
-  },
-];
-
 export const GROUPS = [
   {
-    id: 1000001,
     name: "운동 그룹 A",
     description: "건강한 삶을 위한 운동 그룹",
     photoUrl: "http://localhost:3001/images/run.jpg",
@@ -99,17 +7,55 @@ export const GROUPS = [
     discordWebhookUrl: "http://discord.com/webhookA",
     discordInviteUrl: "http://discord.com/inviteA",
     likeCount: 10,
-    tags: {
-      connect: [{ id: 1000001 }, { id: 1000002 }],
+    TagGroup: {
+      create: [
+        {
+          tag: {
+            create: {
+              name: "운동",
+            },
+          },
+        },
+        {
+          tag: {
+            create: {
+              name: "건강",
+            },
+          },
+        },
+      ],
     },
     ownerNickname: "홍길동",
     ownerPassword: "password123",
     recordCount: 5,
     createdAt: "2023-07-16T08:00:00Z",
     updatedAt: "2023-07-16T08:00:00Z",
+    participants: {
+      create: [
+        {
+          nickname: "홍길동",
+          password: "password123",
+          createdAt: "2023-07-16T09:00:00Z",
+          updatedAt: "2023-07-16T09:00:00Z",
+          records: {
+            create: {
+              exerciseType: "run",
+              description: "아침 조깅",
+              time: 30,
+              distance: 5,
+              photos: ["http://localhost:3001/images/run.jpg"],
+              group: {
+                connect: {
+                  id: 1,
+                },
+              },
+            },
+          },
+        },
+      ],
+    },
   },
   {
-    id: 1000002,
     name: "운동 그룹 B",
     description: "다양한 운동을 즐기는 그룹",
     photoUrl: "http://localhost:3001/images/bike.jpg",
@@ -117,121 +63,169 @@ export const GROUPS = [
     discordWebhookUrl: "http://discord.com/webhookB",
     discordInviteUrl: "http://discord.com/inviteB",
     likeCount: 20,
-    tags: {
-      connect: [{ id: 1000003 }],
+    TagGroup: {
+      create: [
+        {
+          tag: {
+            create: {
+              name: "팀워크",
+            },
+          },
+        },
+      ],
+    },
+    participants: {
+      create: [
+        {
+          nickname: "김영희",
+          password: "password456",
+          createdAt: "2023-07-16T09:30:00Z",
+          updatedAt: "2023-07-16T09:30:00Z",
+          records: {
+            create: {
+              exerciseType: "bike",
+              description: "자전거 라이딩",
+              time: 60,
+              distance: 20,
+              photos: ["http://localhost:3001/images/bike.jpg"],
+              group: {
+                connect: {
+                  id: 2,
+                },
+              },
+            },
+          },
+        },
+        {
+          nickname: "철수",
+          password: "password789",
+          createdAt: "2023-07-16T10:00:00Z",
+          updatedAt: "2023-07-16T10:00:00Z",
+          records: {
+            create: {
+              exerciseType: "bike",
+              description: "자전거 라이딩",
+              time: 40,
+              distance: 18,
+              photos: ["http://localhost:3001/images/bike.jpg"],
+              group: {
+                connect: {
+                  id: 2,
+                },
+              },
+            },
+          },
+        },
+        {
+          nickname: "지훈",
+          password: "password133",
+          createdAt: "2023-07-16T10:30:00Z",
+          updatedAt: "2023-07-16T10:30:00Z",
+          records: {
+            create: {
+              exerciseType: "bike",
+              description: "자전거 라이딩",
+              time: 50,
+              distance: 20,
+              photos: ["http://localhost:3001/images/bike.jpg"],
+              group: {
+                connect: {
+                  id: 2,
+                },
+              },
+            },
+          },
+        },
+        {
+          nickname: "정우",
+          password: "password233",
+          createdAt: "2023-07-16T11:00:00Z",
+          updatedAt: "2023-07-16T11:00:00Z",
+          records: {
+            create: {
+              exerciseType: "bike",
+              description: "자전거 라이딩",
+              time: 10,
+              distance: 5,
+              photos: ["http://localhost:3001/images/bike.jpg"],
+              group: {
+                connect: {
+                  id: 2,
+                },
+              },
+            },
+          },
+        },
+        {
+          nickname: "채운",
+          password: "password333",
+          createdAt: "2023-07-16T11:30:00Z",
+          updatedAt: "2023-07-16T11:30:00Z",
+          records: {
+            create: {
+              exerciseType: "bike",
+              description: "자전거 라이딩",
+              time: 50,
+              distance: 2,
+              photos: ["http://localhost:3001/images/bike.jpg"],
+              group: {
+                connect: {
+                  id: 2,
+                },
+              },
+            },
+          },
+        },
+        {
+          nickname: "기범",
+          password: "password433",
+          createdAt: "2023-07-16T12:00:00Z",
+          updatedAt: "2023-07-16T12:00:00Z",
+          records: {
+            create: {
+              exerciseType: "bike",
+              description: "자전거 라이딩",
+              time: 30,
+              distance: 50,
+              photos: ["http://localhost:3001/images/bike.jpg"],
+              group: {
+                connect: {
+                  id: 2,
+                },
+              },
+            },
+          },
+        },
+        {
+          nickname: "지수",
+          password: "password533",
+          createdAt: "2023-07-16T12:30:00Z",
+          updatedAt: "2023-07-16T12:30:00Z",
+        },
+        {
+          nickname: "현우",
+          password: "password633",
+          createdAt: "2023-07-16T13:00:00Z",
+          updatedAt: "2023-07-16T13:00:00Z",
+        },
+        {
+          nickname: "강태",
+          password: "password733",
+          createdAt: "2023-07-16T13:30:00Z",
+          updatedAt: "2023-07-16T13:30:00Z",
+        },
+        {
+          nickname: "준수",
+          password: "password833",
+          createdAt: "2023-07-16T14:00:00Z",
+          updatedAt: "2023-07-16T14:00:00Z",
+        },
+      ],
     },
     ownerNickname: "김영희",
     ownerPassword: "password456",
     recordCount: 3,
     createdAt: "2023-07-16T08:30:00Z",
     updatedAt: "2023-07-16T08:30:00Z",
-  },
-];
-
-export const RECORDS = [
-  {
-    id: 1000001,
-    exerciseType: "run",
-    description: "아침 조깅",
-    time: 30,
-    distance: 5,
-    photos: ["http://localhost:3001/images/run.jpg"],
-    authorId: 1000001,
-    groupId: 1000001,
-    createdAt: "2023-07-16T09:00:00Z",
-    updatedAt: "2023-07-16T09:00:00Z",
-  },
-  {
-    id: 1000002,
-    exerciseType: "bike",
-    description: "자전거 라이딩",
-    time: 60,
-    distance: 20,
-    photos: ["http://localhost:3001/images/bike.jpg"],
-    authorId: 1000002,
-    groupId: 1000002,
-    createdAt: "2023-07-16T09:30:00Z",
-    updatedAt: "2023-07-16T09:30:00Z",
-  },
-  {
-    id: 1000003,
-    exerciseType: "bike",
-    description: "자전거 라이딩",
-    time: 40,
-    distance: 18,
-    photos: ["http://localhost:3001/images/bike.jpg"],
-    authorId: 1000003,
-    groupId: 1000002,
-    createdAt: "2023-07-16T09:30:00Z",
-    updatedAt: "2023-07-16T09:30:00Z",
-  },
-  {
-    id: 1000004,
-    exerciseType: "bike",
-    description: "자전거 라이딩",
-    time: 50,
-    distance: 20,
-    photos: ["http://localhost:3001/images/bike.jpg"],
-    authorId: 1000004,
-    groupId: 1000002,
-    createdAt: "2023-07-16T09:30:00Z",
-    updatedAt: "2023-07-16T09:30:00Z",
-  },
-  {
-    id: 1000005,
-    exerciseType: "bike",
-    description: "자전거 라이딩",
-    time: 10,
-    distance: 5,
-    photos: ["http://localhost:3001/images/bike.jpg"],
-    authorId: 1000005,
-    groupId: 1000002,
-    createdAt: "2023-07-16T09:30:00Z",
-    updatedAt: "2023-07-16T09:30:00Z",
-  },
-  {
-    id: 1000006,
-    exerciseType: "bike",
-    description: "자전거 라이딩",
-    time: 50,
-    distance: 2,
-    photos: ["http://localhost:3001/images/bike.jpg"],
-    authorId: 1000006,
-    groupId: 1000002,
-    createdAt: "2023-07-16T09:30:00Z",
-    updatedAt: "2023-07-16T09:30:00Z",
-  },
-  {
-    id: 1000007,
-    exerciseType: "bike",
-    description: "자전거 라이딩",
-    time: 30,
-    distance: 50,
-    photos: ["http://localhost:3001/images/bike.jpg"],
-    authorId: 1000007,
-    groupId: 1000002,
-    createdAt: "2023-07-16T09:30:00Z",
-    updatedAt: "2023-07-16T09:30:00Z",
-  },
-];
-
-export const TAGS = [
-  {
-    id: 1000001,
-    name: "운동",
-    createdAt: "2023-01-16T09:30:00Z",
-    updatedAt: "2023-02-16T09:30:00Z",
-  },
-  {
-    id: 1000002,
-    name: "건강",
-    createdAt: "2023-03-16T09:30:00Z",
-    updatedAt: "2023-04-16T09:30:00Z",
-  },
-  {
-    id: 1000003,
-    name: "팀워크",
-    createdAt: "2023-05-16T09:30:00Z",
-    updatedAt: "2023-06-16T09:30:00Z",
   },
 ];

@@ -1,4 +1,3 @@
-
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { CreateGroup, CreateParticipant, CreateRecord } from "../struct.js";
@@ -74,6 +73,23 @@ router
       assert(req.body, CreateGroup);
       await prisma.$transaction(async (prisma) => {
         const body = req.body;
+        const tags = [...new Set(req.body.tags)];
+
+        console.log(tags);
+
+        const tagsID = tags.map(async (tag) => {
+          return await prisma.tag.upsert({
+            where: {
+              name: tag,
+            },
+            create: {
+              name: tag,
+            },
+            update: {},
+          });
+        });
+        console.log(tagsID);
+
         const group = await prisma.group.create({
           data: {
             name: body.name,
@@ -84,6 +100,9 @@ router
             discordInviteUrl: body.discordInviteUrl,
             ownerNickname: body.ownerNickname,
             ownerPassword: body.ownerPassword,
+            tags: {
+              connect: tagsID,
+            },
           },
         });
 
@@ -97,21 +116,9 @@ router
           }),
         ];
 
-        const tags = [...new Set(req.body.tags)];
-
-        group.tags = tags.map((tag) => {
-          return {
-            name: tag,
-            groupId: group.id,
-          };
-        });
-
-        await prisma.tag.createMany({
-          data: group.tags,
-        });
+        group.tags = tags;
 
         const json = formatGroupResponse(group);
-
         res.status(201).json(json);
       });
     })
@@ -535,4 +542,3 @@ router
   );
 
 export default router;
-

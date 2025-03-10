@@ -9,8 +9,8 @@ export const formatGroupResponse = (group) => {
     return {
       id: participant.id,
       nickname: participant.nickname,
-      createdAt: participant.createdAt,
-      updatedAt: participant.updatedAt,
+      createdAt: Date.parse(participant.createdAt),
+      updatedAt: Date.parse(participant.updatedAt),
     };
   });
 

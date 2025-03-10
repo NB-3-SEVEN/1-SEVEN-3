@@ -1,4 +1,3 @@
-
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { CreateGroup, CreateParticipant, CreateRecord } from "../struct.js";
@@ -6,6 +5,7 @@ import { assert } from "superstruct";
 import { asyncHandler } from "../asyncHandler.js";
 import { formatGroupResponse } from "../formatter.js";
 import { autoBadge } from "../badge.js";
+import axios from "axios";
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -237,6 +237,31 @@ router
       });
 
       await autoBadge(groupId);
+
+      const discordWebhookUrl = participant.group.discordWebhookUrl;
+      const groupName = participant.group.name;
+
+      if (discordWebhookUrl) {
+        try {
+          await axios.post(discordWebhookUrl, {
+            embeds: [
+              {
+                title: "새로운 운동 기록 등록!",
+                description: `**그룹**: ${groupName}`,
+                fields: [
+                  { name: "운동 종류", value: exerciseType, inline: true },
+                  { name: "작성자", value: authorNickname, inline: true },
+                  { name: "시간", value: `${time}분`, inline: true },
+                  { name: "거리", value: `${distance}km`, inline: true },
+                ],
+                timestamp: new Date().toISOString(),
+              },
+            ],
+          });
+        } catch (e) {
+          console.error("디스코드 웹훅 전송 실패:", e);
+        }
+      }
 
       res.status(201).send(record);
     })
@@ -535,4 +560,3 @@ router
   );
 
 export default router;
-

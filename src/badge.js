@@ -13,7 +13,7 @@ export const autoBadge = async (groupId) => {
 
   let updatedBadge = [...group.badges];
 
-  const { likeCount, participant, record } = group;
+  const { likeCount } = group;
   const participantsCount = group.participants.length;
   const recordsCount = group.Record.length;
 

@@ -5,6 +5,7 @@ import { assert } from "superstruct";
 import { asyncHandler } from "../asyncHandler.js";
 import { formatGroupResponse } from "../formatter.js";
 import { autoBadge } from "../badge.js";
+import axios from "axios";
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -245,6 +246,31 @@ router
 
       await autoBadge(groupId);
 
+      const discordWebhookUrl = participant.group.discordWebhookUrl;
+      const groupName = participant.group.name;
+
+      if (discordWebhookUrl) {
+        try {
+          await axios.post(discordWebhookUrl, {
+            embeds: [
+              {
+                title: "새로운 운동 기록 등록!",
+                description: `**그룹**: ${groupName}`,
+                fields: [
+                  { name: "운동 종류", value: exerciseType, inline: true },
+                  { name: "작성자", value: authorNickname, inline: true },
+                  { name: "시간", value: `${time}분`, inline: true },
+                  { name: "거리", value: `${distance}km`, inline: true },
+                ],
+                timestamp: new Date().toISOString(),
+              },
+            ],
+          });
+        } catch (e) {
+          console.error("디스코드 웹훅 전송 실패:", e);
+        }
+      }
+
       res.status(201).send(record);
     })
   )
@@ -416,7 +442,7 @@ router
   .patch(
     asyncHandler(async (req, res) => {
       const { id: groupId } = req.params;
-      const { ownerPassword, goalRep, ...updateData } = req.body;
+      const { ownerPassword, goalRep, tags, ...updateData } = req.body;
       const group = await prisma.group.findFirstOrThrow({
         where: { id: parseInt(groupId, 10) },
       });
@@ -427,6 +453,46 @@ router
 
       if (goalRep && !Number.isInteger(goalRep)) {
         return res.status(400).json({ message: "goalRep must be an integer" });
+      }
+
+      if (tags) {
+        const newTags = tags.map((tag) => tag.replace("#", "").trim());
+
+        const existingTags = await prisma.tag.findMany({
+          where: { name: { in: newTags } },
+          select: { id: true, name: true },
+        });
+
+        const tagsToCreate = newTags.filter(
+          (tag) => !existingTags.some((t) => t.name === tag)
+        );
+
+        const createdTags = await prisma.$transaction(
+          tagsToCreate.map((tag) =>
+            prisma.tag.create({ data: { name: tag }, select: { id: true } })
+          )
+        );
+
+        const allTaglds = [...existingTags, ...createdTags].map((tag) => ({
+          id: tag.id,
+        }));
+
+        await prisma.group.update({
+          where: { id: parseInt(groupId, 10) },
+          data: {
+            ...updateData,
+            goalRep,
+            tags: { set: allTaglds },
+          },
+        });
+      } else {
+        await prisma.group.update({
+          where: { id: parseInt(groupId, 10) },
+          data: {
+            ...updateData,
+            goalRep,
+          },
+        });
       }
 
       await prisma.group.update({

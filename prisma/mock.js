@@ -4,7 +4,8 @@ export const GROUPS = [
     description: "건강한 삶을 위한 운동 그룹",
     photoUrl: "http://localhost:3001/images/run.jpg",
     goalRep: 100,
-    discordWebhookUrl: "http://discord.com/webhookA",
+    discordWebhookUrl:
+      "https://discord.com/api/webhooks/1348485694795812894/OoTIboqP6HVGg9cdnvL3xPo40BonrSYMdyVfCN0DiBqc_N2kN44sH4U2ySBDpDlVjNT9",
     discordInviteUrl: "http://discord.com/inviteA",
     likeCount: 10,
     TagGroup: {
@@ -60,7 +61,8 @@ export const GROUPS = [
     description: "다양한 운동을 즐기는 그룹",
     photoUrl: "http://localhost:3001/images/bike.jpg",
     goalRep: 200,
-    discordWebhookUrl: "http://discord.com/webhookB",
+    discordWebhookUrl:
+      "https://discord.com/api/webhooks/1348521144042520667/1q3X4DhS8gVZ6XxJiXY5lg52yoKvY88BLTiBnBZW9mC3Mc5OlR-Ja45SMA-PNDbIrbdS",
     discordInviteUrl: "http://discord.com/inviteB",
     likeCount: 20,
     TagGroup: {

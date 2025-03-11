@@ -76,21 +76,6 @@ router
         const body = req.body;
         const tags = [...new Set(req.body.tags)];
 
-        console.log(tags);
-
-        const tagsID = tags.map(async (tag) => {
-          return await prisma.tag.upsert({
-            where: {
-              name: tag,
-            },
-            create: {
-              name: tag,
-            },
-            update: {},
-          });
-        });
-        console.log(tagsID);
-
         const group = await prisma.group.create({
           data: {
             name: body.name,
@@ -101,8 +86,22 @@ router
             discordInviteUrl: body.discordInviteUrl,
             ownerNickname: body.ownerNickname,
             ownerPassword: body.ownerPassword,
-            tags: {
-              connect: tagsID,
+            TagGroup: {
+              create: tags.map((tag) => ({
+                tag: {
+                  connectOrCreate: {
+                    where: {
+                      name: tag,
+                    },
+                    create: { name: tag },
+                  },
+                },
+              })),
+            },
+          },
+          include: {
+            TagGroup: {
+              include: { tag: true },
             },
           },
         });
@@ -116,8 +115,6 @@ router
             },
           }),
         ];
-
-        group.tags = tags;
 
         const json = formatGroupResponse(group);
         res.status(201).json(json);

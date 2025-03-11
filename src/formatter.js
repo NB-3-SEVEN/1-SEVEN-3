@@ -14,10 +14,8 @@ export const formatGroupResponse = (group) => {
     };
   });
 
-  const tags = group.tags.map((tag) => {
-    if (tag.groupId === group.id) {
-      return tag.name;
-    }
+  const tags = group.TagGroup.map((tag) => {
+    return tag.tag.name;
   });
   return {
     id: group.id,

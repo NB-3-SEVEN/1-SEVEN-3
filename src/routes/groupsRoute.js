@@ -592,7 +592,10 @@ router
 
       const group = await prisma.group.findUniqueOrThrow({
         where: { id: parseInt(groupId, 10) },
-        include: { tags: true, participants: true },
+        include: {
+          TagGroup: { include: { tag: true } },
+          participants: true,
+        },
       });
 
       res.json(formatGroupResponse(group));

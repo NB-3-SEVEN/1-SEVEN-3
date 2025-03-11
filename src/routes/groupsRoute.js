@@ -470,36 +470,37 @@ router
           )
         );
 
-        const allTaglds = [...existingTags, ...createdTags].map((tag) => ({
-          id: tag.id,
-        }));
+        const allTagIds = [...existingTags, ...createdTags].map(
+          (tag) => tag.id
+        );
 
-        await prisma.group.update({
-          where: { id: parseInt(groupId, 10) },
-          data: {
-            ...updateData,
-            goalRep,
-            tags: { set: allTaglds },
-          },
+        await prisma.tagGroup.deleteMany({
+          where: { groupId: parseInt(groupId, 10) },
         });
-      } else {
-        await prisma.group.update({
-          where: { id: parseInt(groupId, 10) },
-          data: {
-            ...updateData,
-            goalRep,
-          },
-        });
+
+        await prisma.$transaction(
+          allTagIds.map((tagId) =>
+            prisma.tagGroup.create({
+              data: {
+                groupId: parseInt(groupId, 10),
+                tagId,
+              },
+            })
+          )
+        );
       }
 
       await prisma.group.update({
         where: { id: parseInt(groupId, 10) },
-        data: { ...updateData, goalRep },
+        data: {
+          ...updateData,
+          goalRep,
+        },
       });
 
       const updatedGroup = await prisma.group.findFirstOrThrow({
         where: { id: parseInt(groupId, 10) },
-        include: { participants: true, tags: true },
+        include: { participants: true, TagGroup: { include: { tag: true } } },
       });
 
       res.json(formatGroupResponse(updatedGroup));

@@ -14,9 +14,11 @@ export const formatGroupResponse = (group) => {
     };
   });
 
-  const tags = group.TagGroup.map((tag) => {
-    return tag.tag.name;
-  });
+  const tags =
+    group.TagGroup?.map((tagGroup) => {
+      return tagGroup.tag.name;
+    }) || [];
+
   return {
     id: group.id,
     name: group.name,

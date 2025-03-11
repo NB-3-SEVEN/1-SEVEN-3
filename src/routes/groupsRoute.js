@@ -43,7 +43,7 @@ router
       }
 
       const groups = await prisma.group.findMany({
-        skip: Number((page - 1) * 6),
+        skip: Number((page - 1) * limit),
         take: Number(limit),
         orderBy: orderByParameter,
         where: {

@@ -6,9 +6,9 @@ import { asyncHandler } from "../asyncHandler.js";
 import { formatGroupResponse } from "../formatter.js";
 import { autoBadge } from "../badge.js";
 import axios from "axios";
-import { skip } from "@prisma/client/runtime/library";
 
 const prisma = new PrismaClient();
+
 const router = express.Router();
 //그룹 목록 조회
 router

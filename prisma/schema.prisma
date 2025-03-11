@@ -32,7 +32,8 @@ model Group {
   goalRep           Int
   discordWebhookUrl String?
   discordInviteUrl  String?
-  likeCount         Int           @default(0)
+  likeCount         Int
+  tags              String[]
   ownerNickname     String
   ownerPassword     String
   badges            BadgeType[]

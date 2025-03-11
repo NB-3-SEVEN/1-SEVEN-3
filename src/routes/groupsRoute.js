@@ -74,6 +74,23 @@ router
       assert(req.body, CreateGroup);
       await prisma.$transaction(async (prisma) => {
         const body = req.body;
+        const tags = [...new Set(req.body.tags)];
+
+        console.log(tags);
+
+        const tagsID = tags.map(async (tag) => {
+          return await prisma.tag.upsert({
+            where: {
+              name: tag,
+            },
+            create: {
+              name: tag,
+            },
+            update: {},
+          });
+        });
+        console.log(tagsID);
+
         const group = await prisma.group.create({
           data: {
             name: body.name,
@@ -84,6 +101,9 @@ router
             discordInviteUrl: body.discordInviteUrl,
             ownerNickname: body.ownerNickname,
             ownerPassword: body.ownerPassword,
+            tags: {
+              connect: tagsID,
+            },
           },
         });
 
@@ -97,21 +117,9 @@ router
           }),
         ];
 
-        const tags = [...new Set(req.body.tags)];
-
-        group.tags = tags.map((tag) => {
-          return {
-            name: tag,
-            groupId: group.id,
-          };
-        });
-
-        await prisma.tag.createMany({
-          data: group.tags,
-        });
+        group.tags = tags;
 
         const json = formatGroupResponse(group);
-
         res.status(201).json(json);
       });
     })
@@ -465,36 +473,37 @@ router
           )
         );
 
-        const allTaglds = [...existingTags, ...createdTags].map((tag) => ({
-          id: tag.id,
-        }));
+        const allTagIds = [...existingTags, ...createdTags].map(
+          (tag) => tag.id
+        );
 
-        await prisma.group.update({
-          where: { id: parseInt(groupId, 10) },
-          data: {
-            ...updateData,
-            goalRep,
-            tags: { set: allTaglds },
-          },
+        await prisma.tagGroup.deleteMany({
+          where: { groupId: parseInt(groupId, 10) },
         });
-      } else {
-        await prisma.group.update({
-          where: { id: parseInt(groupId, 10) },
-          data: {
-            ...updateData,
-            goalRep,
-          },
-        });
+
+        await prisma.$transaction(
+          allTagIds.map((tagId) =>
+            prisma.tagGroup.create({
+              data: {
+                groupId: parseInt(groupId, 10),
+                tagId,
+              },
+            })
+          )
+        );
       }
 
       await prisma.group.update({
         where: { id: parseInt(groupId, 10) },
-        data: { ...updateData, goalRep },
+        data: {
+          ...updateData,
+          goalRep,
+        },
       });
 
       const updatedGroup = await prisma.group.findFirstOrThrow({
         where: { id: parseInt(groupId, 10) },
-        include: { participants: true, tags: true },
+        include: { participants: true, TagGroup: { include: { tag: true } } },
       });
 
       res.json(formatGroupResponse(updatedGroup));

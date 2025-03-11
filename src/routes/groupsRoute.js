@@ -52,7 +52,11 @@ router
           },
         },
         include: {
-          tags: true,
+          TagGroup: {
+            include: {
+              tag: true,
+            },
+          },
           participants: true,
         },
       });
@@ -129,7 +133,11 @@ router.route("/:groupId").get(
         id: Number(groupId),
       },
       include: {
-        tags: true,
+        TagGroup: {
+          include: {
+            tag: true,
+          },
+        },
         participants: true,
       },
     });

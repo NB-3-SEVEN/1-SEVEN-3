@@ -6,9 +6,11 @@ import { asyncHandler } from "../asyncHandler.js";
 import { formatGroupResponse } from "../formatter.js";
 import { autoBadge } from "../badge.js";
 import axios from "axios";
+import { skip } from "@prisma/client/runtime/library";
 
 const prisma = new PrismaClient();
 const router = express.Router();
+//그룹 목록 조회
 router
   .route("/")
   .get(
@@ -40,6 +42,12 @@ router
             },
           };
           break;
+        default: {
+          return res.status(400).json({
+            message:
+              "The orderBy parameter must be one of the following values: [‘likeCount’, ‘participantCount’, ‘createdAt’].",
+          });
+        }
       }
 
       const groups = await prisma.group.findMany({
@@ -75,6 +83,9 @@ router
   )
   .post(
     asyncHandler(async (req, res) => {
+      if (!Number.isInteger(parseInt(req.body.goalRep))) {
+        return res.status(400).json({ message: "goalRep must be an integer" });
+      }
       assert(req.body, CreateGroup);
       await prisma.$transaction(async (prisma) => {
         const body = req.body;
@@ -125,6 +136,7 @@ router
       });
     })
   );
+// 그룹 상세 조회
 router.route("/:groupId").get(
   asyncHandler(async (req, res) => {
     const { groupId } = req.params;
@@ -142,13 +154,23 @@ router.route("/:groupId").get(
       },
     });
 
+    if (!group) {
+      return res.status(400).json({ message: "Group not found" });
+    }
+
     res.status(200).json(formatGroupResponse(group));
   })
 );
+// 랭킹 조회
 router.route("/:groupId/rank/").get(
   asyncHandler(async (req, res) => {
     const { groupId } = req.params;
-    const { duration = "monthly" } = req.query;
+    const { duration = "monthly", page = 1, limit = 10 } = req.query;
+
+    if (!Number.isInteger(parseInt(groupId))) {
+      return res.status(400).json({ message: "groupId must be an integer" });
+    }
+
     const participants = await prisma.participant.findMany({
       where: {
         groupId: Number(groupId),
@@ -184,7 +206,9 @@ router.route("/:groupId/rank/").get(
       };
     });
 
-    const json = rank.sort((a, b) => b.recordCount - a.recordCount);
+    const json = rank
+      .sort((a, b) => b.recordCount - a.recordCount)
+      .slice((page - 1) * limit, page * limit);
 
     res.status(200).json(json);
   })

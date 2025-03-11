@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { PARTICIPANTS, GROUPS, RECORDS } from "./mock.js";
+import { GROUPS } from "./mock.js";
 
 const prisma = new PrismaClient();
 
@@ -8,22 +8,13 @@ async function main() {
   await prisma.record.deleteMany();
   await prisma.participant.deleteMany();
   await prisma.group.deleteMany();
+  await prisma.tag.deleteMany();
 
-  // 목 데이터 삽입
-  await prisma.group.createMany({
-    data: GROUPS,
-    skipDuplicates: true,
-  });
-
-  await Promise.all(
-    PARTICIPANTS.map(async (participant) => {
-      await prisma.participant.create({ data: participant });
-    })
-  );
-
-  await prisma.record.createMany({
-    data: RECORDS,
-    skipDuplicates: true,
+  // 그룹+참가자+태그+레코드+그룹과태그의관계테이블 데이터 삽입
+  GROUPS.map(async (group) => {
+    await prisma.group.create({
+      data: group,
+    });
   });
 
   console.log("Seeding completed!");

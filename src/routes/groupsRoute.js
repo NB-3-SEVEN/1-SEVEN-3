@@ -42,6 +42,12 @@ router
             },
           };
           break;
+        default: {
+          return res.status(400).json({
+            message:
+              "The orderBy parameter must be one of the following values: [‘likeCount’, ‘participantCount’, ‘createdAt’].",
+          });
+        }
       }
 
       const groups = await prisma.group.findMany({
@@ -77,6 +83,9 @@ router
   )
   .post(
     asyncHandler(async (req, res) => {
+      if (!Number.isInteger(parseInt(req.body.goalRep))) {
+        return res.status(400).json({ message: "goalRep must be an integer" });
+      }
       assert(req.body, CreateGroup);
       await prisma.$transaction(async (prisma) => {
         const body = req.body;
@@ -144,6 +153,10 @@ router.route("/:groupId").get(
         participants: true,
       },
     });
+
+    if (!group) {
+      return res.status(400).json({ message: "Group not found" });
+    }
 
     res.status(200).json(formatGroupResponse(group));
   })

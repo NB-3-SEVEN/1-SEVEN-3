@@ -455,8 +455,6 @@ router
         return res.status(400).json({ message: "goalRep must be an integer" });
       }
 
-      let tagGroupData = {};
-
       if (tags) {
         const newTags = tags.map((tag) => tag.replace("#", "").trim());
 

@@ -3,4 +3,3 @@ DS_Store
 .env
 request
 *.http
-/prisma/migrations

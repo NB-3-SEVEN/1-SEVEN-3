@@ -4,6 +4,9 @@ import {
   CreateGroup,
   CreateParticipant,
   CreateRecord,
+  IdPwValidate,
+  PatchGroup,
+  Query,
 } from "../middleware/struct.js";
 import { assert } from "superstruct";
 import { asyncHandler } from "../middleware/asyncHandler.js";
@@ -19,6 +22,7 @@ router
   .route("/")
   .get(
     asyncHandler(async (req, res) => {
+      assert(req.query, Query);
       const {
         page = 1,
         limit = 10,
@@ -153,6 +157,7 @@ router.route("/:groupId").get(
 router.route("/:groupId/rank/").get(
   asyncHandler(async (req, res) => {
     const { groupId } = req.params;
+    assert(req.query, Query);
     const { duration = "monthly", page = 1, limit = 10 } = req.query;
 
     if (!Number.isInteger(parseInt(groupId))) {
@@ -295,6 +300,7 @@ router
     // 그룹 운동 기록 목록 조회
     asyncHandler(async (req, res) => {
       const { groupId } = req.params;
+      assert(req.query, Query);
       const {
         page = 1,
         limit = 10,
@@ -459,6 +465,7 @@ router
   .patch(
     asyncHandler(async (req, res) => {
       const { id: groupId } = req.params;
+      assert(req.body, PatchGroup);
       const { ownerPassword, goalRep, tags, ...updateData } = req.body;
       const group = await prisma.group.findFirstOrThrow({
         where: { id: parseInt(groupId, 10) },
@@ -471,6 +478,8 @@ router
       if (goalRep && !Number.isInteger(goalRep)) {
         return res.status(400).json({ message: "goalRep must be an integer" });
       }
+
+      let tagData = {};
 
       if (tags) {
         const newTags = tags.map((tag) => tag.replace("#", "").trim());
@@ -494,33 +503,27 @@ router
           (tag) => tag.id
         );
 
-        await prisma.tagGroup.deleteMany({
-          where: { groupId: parseInt(groupId, 10) },
-        });
-
-        await prisma.$transaction(
-          allTagIds.map((tagId) =>
-            prisma.tagGroup.create({
-              data: {
-                groupId: parseInt(groupId, 10),
-                tagId,
-              },
-            })
-          )
-        );
+        tagData = {
+          tags: {
+            set: allTagIds.map((id) => ({ id })),
+          },
+        };
       }
 
-      await prisma.group.update({
+      const updatedGroup = await prisma.group.update({
         where: { id: parseInt(groupId, 10) },
         data: {
           ...updateData,
           goalRep,
+          ...tagData,
         },
+        include: { participants: true, tags: true },
       });
 
-      const updatedGroup = await prisma.group.findFirstOrThrow({
-        where: { id: parseInt(groupId, 10) },
-        include: { participants: true, TagGroup: { include: { tag: true } } },
+      await prisma.tag.deleteMany({
+        where: {
+          groups: { none: {} },
+        },
       });
 
       res.json(formatGroupResponse(updatedGroup));
@@ -528,17 +531,13 @@ router
   )
   .delete(
     asyncHandler(async (req, res) => {
+      assert(req.body, IdPwValidate);
       const { id } = req.params;
       const { ownerPassword } = req.body;
 
       const group = await prisma.group.findUniqueOrThrow({
         where: { id: parseInt(id, 10) },
       });
-
-      console.log(group);
-      if (!group) {
-        return res.status(404).json({ message: "Group not found" });
-      }
 
       if (group.ownerPassword.trim() !== ownerPassword.trim()) {
         return res.status(401).json({ message: "Wrong password" });
@@ -548,6 +547,12 @@ router
         where: { id: parseInt(id, 10) },
       });
 
+      await prisma.tag.deleteMany({
+        where: {
+          groups: { none: {} },
+        },
+      });
+
       res.json({ message: deletedGrop });
     })
   );
@@ -555,11 +560,9 @@ router
   .route("/:id/participants")
   .post(
     asyncHandler(async (req, res) => {
+      assert(req.body, CreateParticipant);
       const { id: groupId } = req.params;
       const { nickname, password } = req.body;
-
-      assert(req.body, CreateParticipant);
-
       const existingParticipant = await prisma.participant.findFirst({
         where: { nickname, groupId: parseInt(groupId, 10) },
       });
@@ -592,6 +595,7 @@ router
   .delete(
     asyncHandler(async (req, res) => {
       const { id: groupId } = req.params;
+      assert(req.body, deletedParticipant);
       const { nickname, password } = req.body;
 
       const participant = await prisma.participant.findFirst({

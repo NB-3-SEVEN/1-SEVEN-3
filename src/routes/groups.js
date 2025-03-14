@@ -1,10 +1,17 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
-import { CreateGroup, CreateParticipant, CreateRecord } from "../struct.js";
+import {
+  CreateGroup,
+  CreateParticipant,
+  CreateRecord,
+  IdPwValidate,
+  PatchGroup,
+  Query,
+} from "../middleware/struct.js";
 import { assert } from "superstruct";
-import { asyncHandler } from "../asyncHandler.js";
-import { formatGroupResponse } from "../formatter.js";
-import { autoBadge } from "../badge.js";
+import { asyncHandler } from "../middleware/asyncHandler.js";
+import { formatGroupResponse } from "../utils/formatter.js";
+import { autoBadge } from "../utils/badge.js";
 import axios from "axios";
 
 const prisma = new PrismaClient();
@@ -15,6 +22,7 @@ router
   .route("/")
   .get(
     asyncHandler(async (req, res) => {
+      assert(req.query, Query);
       const {
         page = 1,
         limit = 10,
@@ -149,6 +157,7 @@ router.route("/:groupId").get(
 router.route("/:groupId/rank/").get(
   asyncHandler(async (req, res) => {
     const { groupId } = req.params;
+    assert(req.query, Query);
     const { duration = "monthly", page = 1, limit = 10 } = req.query;
 
     if (!Number.isInteger(parseInt(groupId))) {
@@ -291,6 +300,7 @@ router
     // 그룹 운동 기록 목록 조회
     asyncHandler(async (req, res) => {
       const { groupId } = req.params;
+      assert(req.query, Query);
       const {
         page = 1,
         limit = 10,
@@ -455,6 +465,7 @@ router
   .patch(
     asyncHandler(async (req, res) => {
       const { id: groupId } = req.params;
+      assert(req.body, PatchGroup);
       const { ownerPassword, goalRep, tags, ...updateData } = req.body;
       const group = await prisma.group.findFirstOrThrow({
         where: { id: parseInt(groupId, 10) },
@@ -520,6 +531,7 @@ router
   )
   .delete(
     asyncHandler(async (req, res) => {
+      assert(req.body, IdPwValidate);
       const { id } = req.params;
       const { ownerPassword } = req.body;
 
@@ -544,16 +556,13 @@ router
       res.json({ message: deletedGrop });
     })
   );
-
 router
   .route("/:id/participants")
   .post(
     asyncHandler(async (req, res) => {
+      assert(req.body, CreateParticipant);
       const { id: groupId } = req.params;
       const { nickname, password } = req.body;
-
-      assert(req.body, CreateParticipant);
-
       const existingParticipant = await prisma.participant.findFirst({
         where: { nickname, groupId: parseInt(groupId, 10) },
       });
@@ -575,7 +584,7 @@ router
       const group = await prisma.group.findUniqueOrThrow({
         where: { id: parseInt(groupId, 10) },
         include: {
-          TagGroup: { include: { tag: true } },
+          tags: true,
           participants: true,
         },
       });
@@ -586,6 +595,7 @@ router
   .delete(
     asyncHandler(async (req, res) => {
       const { id: groupId } = req.params;
+      assert(req.body, deletedParticipant);
       const { nickname, password } = req.body;
 
       const participant = await prisma.participant.findFirst({

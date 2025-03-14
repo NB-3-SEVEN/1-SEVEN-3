@@ -26,3 +26,9 @@ export const CreateRecord = s.object({
   authorNickname: s.size(s.string(), 1, 20),
   authorPassword: s.size(s.string(), 8, 20),
 });
+
+export const Query = s.object({
+  limit: s.optional(s.min(s.integer(), 1)),
+  page: s.optional(s.min(s.integer(), 1)),
+  sort: s.optional(s.string()),
+});

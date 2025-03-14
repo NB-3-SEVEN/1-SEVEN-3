@@ -1,3 +1,5 @@
+import { create } from "superstruct";
+
 export const GROUPS = [
   {
     name: "운동 그룹 A",
@@ -8,21 +10,13 @@ export const GROUPS = [
       "https://discord.com/api/webhooks/1348485694795812894/OoTIboqP6HVGg9cdnvL3xPo40BonrSYMdyVfCN0DiBqc_N2kN44sH4U2ySBDpDlVjNT9",
     discordInviteUrl: "http://discord.com/inviteA",
     likeCount: 10,
-    TagGroup: {
+    tags: {
       create: [
         {
-          tag: {
-            create: {
-              name: "운동",
-            },
-          },
+          name: "운동",
         },
         {
-          tag: {
-            create: {
-              name: "건강",
-            },
-          },
+          name: "건강",
         },
       ],
     },
@@ -65,16 +59,10 @@ export const GROUPS = [
       "https://discord.com/api/webhooks/1348521144042520667/1q3X4DhS8gVZ6XxJiXY5lg52yoKvY88BLTiBnBZW9mC3Mc5OlR-Ja45SMA-PNDbIrbdS",
     discordInviteUrl: "http://discord.com/inviteB",
     likeCount: 20,
-    TagGroup: {
-      create: [
-        {
-          tag: {
-            create: {
-              name: "팀워크",
-            },
-          },
-        },
-      ],
+    tags: {
+      create: {
+        name: "팀워크",
+      },
     },
     participants: {
       create: [

@@ -468,6 +468,8 @@ router
         return res.status(400).json({ message: "goalRep must be an integer" });
       }
 
+      let tagData = {};
+
       if (tags) {
         const newTags = tags.map((tag) => tag.replace("#", "").trim());
 
@@ -490,33 +492,27 @@ router
           (tag) => tag.id
         );
 
-        await prisma.tagGroup.deleteMany({
-          where: { groupId: parseInt(groupId, 10) },
-        });
-
-        await prisma.$transaction(
-          allTagIds.map((tagId) =>
-            prisma.tagGroup.create({
-              data: {
-                groupId: parseInt(groupId, 10),
-                tagId,
-              },
-            })
-          )
-        );
+        tagData = {
+          tags: {
+            set: allTagIds.map((id) => ({ id })),
+          },
+        };
       }
 
-      await prisma.group.update({
+      const updatedGroup = await prisma.group.update({
         where: { id: parseInt(groupId, 10) },
         data: {
           ...updateData,
           goalRep,
+          ...tagData,
         },
+        include: { participants: true, tags: true },
       });
 
-      const updatedGroup = await prisma.group.findFirstOrThrow({
-        where: { id: parseInt(groupId, 10) },
-        include: { participants: true, TagGroup: { include: { tag: true } } },
+      await prisma.tag.deleteMany({
+        where: {
+          groups: { none: {} },
+        },
       });
 
       res.json(formatGroupResponse(updatedGroup));
@@ -531,11 +527,6 @@ router
         where: { id: parseInt(id, 10) },
       });
 
-      console.log(group);
-      if (!group) {
-        return res.status(404).json({ message: "Group not found" });
-      }
-
       if (group.ownerPassword.trim() !== ownerPassword.trim()) {
         return res.status(401).json({ message: "Wrong password" });
       }
@@ -544,9 +535,16 @@ router
         where: { id: parseInt(id, 10) },
       });
 
+      await prisma.tag.deleteMany({
+        where: {
+          groups: { none: {} },
+        },
+      });
+
       res.json({ message: deletedGrop });
     })
   );
+
 router
   .route("/:id/participants")
   .post(

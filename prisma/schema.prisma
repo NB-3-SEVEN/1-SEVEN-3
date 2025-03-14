@@ -33,7 +33,7 @@ model Group {
   discordWebhookUrl String?
   discordInviteUrl  String?
   likeCount         Int           @default(0)
-  tags              String[]
+  tags              Tag[]
   ownerNickname     String
   ownerPassword     String
   badges            BadgeType[]
@@ -42,7 +42,6 @@ model Group {
   updatedAt         DateTime      @updatedAt
   participants      Participant[]
   Record            Record[]
-  TagGroup          TagGroup[]
 }
 
 model Record {
@@ -61,21 +60,11 @@ model Record {
 }
 
 model Tag {
-  id        Int        @id @default(autoincrement())
-  name      String     @unique
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  groupId   Int?
-  TagGroup  TagGroup[]
-}
-
-model TagGroup {
-  tagId   Int
-  groupId Int
-  tag     Tag   @relation(fields: [tagId], references: [id])
-  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  @@id([tagId, groupId])
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  groups    Group[]
 }
 
 enum BadgeType {

@@ -3,4 +3,8 @@ DS_Store
 .env
 request
 *.http
+<<<<<<< HEAD
 migrations
+=======
+migrations
+>>>>>>> 4c5034c6a67098ddd1d55cbc641ace2455a47c4f

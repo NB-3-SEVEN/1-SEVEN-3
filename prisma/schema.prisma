@@ -64,7 +64,6 @@ model Tag {
   name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  groupId   Int?
   groups    Group[]
 }
 

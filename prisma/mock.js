@@ -1,5 +1,3 @@
-import { create } from "superstruct";
-
 export const GROUPS = [
   {
     name: "운동 그룹 A",

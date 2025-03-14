@@ -15,8 +15,8 @@ export const formatGroupResponse = (group) => {
   });
 
   const tags =
-    group.TagGroup?.map((tagGroup) => {
-      return tagGroup.tag.name;
+    group.tags?.map((tag) => {
+      return tag.name;
     }) || [];
 
   return {

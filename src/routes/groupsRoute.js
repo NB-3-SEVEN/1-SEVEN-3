@@ -60,11 +60,7 @@ router
           },
         },
         include: {
-          TagGroup: {
-            include: {
-              tag: true,
-            },
-          },
+          tags: true,
           participants: true,
         },
       });
@@ -101,23 +97,14 @@ router
             discordInviteUrl: body.discordInviteUrl,
             ownerNickname: body.ownerNickname,
             ownerPassword: body.ownerPassword,
-            TagGroup: {
-              create: tags.map((tag) => ({
-                tag: {
-                  connectOrCreate: {
-                    where: {
-                      name: tag,
-                    },
-                    create: { name: tag },
-                  },
-                },
-              })),
+            tags: {
+              connectOrCreate: tags.map((tag) => {
+                return { create: { name: tag }, where: { name: tag } };
+              }),
             },
           },
           include: {
-            TagGroup: {
-              include: { tag: true },
-            },
+            tags: true,
           },
         });
 
@@ -136,6 +123,7 @@ router
       });
     })
   );
+
 // 그룹 상세 조회
 router.route("/:groupId").get(
   asyncHandler(async (req, res) => {
@@ -145,11 +133,7 @@ router.route("/:groupId").get(
         id: Number(groupId),
       },
       include: {
-        TagGroup: {
-          include: {
-            tag: true,
-          },
-        },
+        tags: true,
         participants: true,
       },
     });

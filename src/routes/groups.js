@@ -1,10 +1,14 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
-import { CreateGroup, CreateParticipant, CreateRecord } from "../struct.js";
+import {
+  CreateGroup,
+  CreateParticipant,
+  CreateRecord,
+} from "../middleware/struct.js";
 import { assert } from "superstruct";
-import { asyncHandler } from "../asyncHandler.js";
-import { formatGroupResponse } from "../formatter.js";
-import { autoBadge } from "../badge.js";
+import { asyncHandler } from "../middleware/asyncHandler.js";
+import { formatGroupResponse } from "../utils/formatter.js";
+import { autoBadge } from "../utils/badge.js";
 import axios from "axios";
 
 const prisma = new PrismaClient();
@@ -468,8 +472,6 @@ router
         return res.status(400).json({ message: "goalRep must be an integer" });
       }
 
-      let tagData = {};
-
       if (tags) {
         const newTags = tags.map((tag) => tag.replace("#", "").trim());
 
@@ -492,27 +494,33 @@ router
           (tag) => tag.id
         );
 
-        tagData = {
-          tags: {
-            set: allTagIds.map((id) => ({ id })),
-          },
-        };
+        await prisma.tagGroup.deleteMany({
+          where: { groupId: parseInt(groupId, 10) },
+        });
+
+        await prisma.$transaction(
+          allTagIds.map((tagId) =>
+            prisma.tagGroup.create({
+              data: {
+                groupId: parseInt(groupId, 10),
+                tagId,
+              },
+            })
+          )
+        );
       }
 
-      const updatedGroup = await prisma.group.update({
+      await prisma.group.update({
         where: { id: parseInt(groupId, 10) },
         data: {
           ...updateData,
           goalRep,
-          ...tagData,
         },
-        include: { participants: true, tags: true },
       });
 
-      await prisma.tag.deleteMany({
-        where: {
-          groups: { none: {} },
-        },
+      const updatedGroup = await prisma.group.findFirstOrThrow({
+        where: { id: parseInt(groupId, 10) },
+        include: { participants: true, TagGroup: { include: { tag: true } } },
       });
 
       res.json(formatGroupResponse(updatedGroup));
@@ -527,6 +535,11 @@ router
         where: { id: parseInt(id, 10) },
       });
 
+      console.log(group);
+      if (!group) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+
       if (group.ownerPassword.trim() !== ownerPassword.trim()) {
         return res.status(401).json({ message: "Wrong password" });
       }
@@ -535,16 +548,9 @@ router
         where: { id: parseInt(id, 10) },
       });
 
-      await prisma.tag.deleteMany({
-        where: {
-          groups: { none: {} },
-        },
-      });
-
       res.json({ message: deletedGrop });
     })
   );
-
 router
   .route("/:id/participants")
   .post(
@@ -575,7 +581,7 @@ router
       const group = await prisma.group.findUniqueOrThrow({
         where: { id: parseInt(groupId, 10) },
         include: {
-          TagGroup: { include: { tag: true } },
+          tags: true,
           participants: true,
         },
       });

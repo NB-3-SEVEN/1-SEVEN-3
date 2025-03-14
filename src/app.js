@@ -1,10 +1,10 @@
 import express from "express";
 import * as dotenv from "dotenv";
 import cors from "cors";
-import groupsRoute from "./routes/groupsRoute.js";
-import tagsRoute from "./routes/tagsRoute.js";
+import groupsRoute from "./routes/groups.js";
+import tagsRoute from "./routes/tags.js";
 import multer from "multer";
-import { asyncHandler } from "./asyncHandler.js";
+import { asyncHandler } from "./middleware/asyncHandler.js";
 
 dotenv.config();
 

@@ -33,12 +33,24 @@ export const Query = s.object({
   sort: s.optional(s.string()),
 });
 
-export const DeleteGroup = s.object({
+export const IdPwValidate = s.object({
   groupid: s.size(s.integer(), 1),
-  password: s.size(s.string(), 8, 20),
+  ownerPassword: s.size(s.string(), 8, 20),
 });
 
 export const DeletParticipant = s.object({
   nickname: s.size(s.string(), 1, 20),
   password: s.size(s.string(), 8, 20),
+});
+
+export const PatchGroup = s.object({
+  name: s.optional(s.size(s.string(), 1, 20)),
+  description: s.optional(s.string()),
+  photoUrl: s.optional(s.string()),
+  goalRep: s.optional(s.min(s.integer(), 1)),
+  discordWebhookUrl: s.optional(s.size(s.string(), 1, 255)),
+  discordInviteUrl: s.optional(s.size(s.string(), 1, 255)),
+  tags: s.optional(s.array(s.string())),
+  ownerNickname: s.optional(s.size(s.string(), 1, 20)),
+  ownerPassword: s.optional(s.size(s.string(), 8, 20)),
 });

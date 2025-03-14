@@ -32,3 +32,13 @@ export const Query = s.object({
   page: s.optional(s.min(s.integer(), 1)),
   sort: s.optional(s.string()),
 });
+
+export const DeleteGroup = s.object({
+  groupid: s.size(s.integer(), 1),
+  password: s.size(s.string(), 8, 20),
+});
+
+export const DeletParticipant = s.object({
+  nickname: s.size(s.string(), 1, 20),
+  password: s.size(s.string(), 8, 20),
+});
